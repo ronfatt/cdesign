@@ -22,6 +22,7 @@ import { PartnerLogos } from './components/partners/PartnerLogos';
 import { TestimonialSection } from './components/testimonials/TestimonialSection';
 import { StartProjectCTA } from './components/cta/StartProjectCTA';
 import { ProgressiveInquiryModal } from './components/contact/ProgressiveInquiryModal';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 import { Footer } from './components/footer/Footer';
 import { StickyMobileCTA } from './components/common/StickyMobileCTA';
 import { useSmoothScroll } from './hooks/useSmoothScroll';
@@ -30,6 +31,7 @@ import type { Project } from './types';
 export function AppContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShowreelOpen, setIsShowreelOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeCaseStudy, setActiveCaseStudy] = useState<Project | null>(null);
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [inquiryTopic, setInquiryTopic] = useState<string | undefined>(undefined);
@@ -42,12 +44,24 @@ export function AppContent() {
   // Initialize Lenis Smooth Scroll
   useSmoothScroll();
 
-  // Staged entrance trigger
+  // Staged entrance trigger & Admin shortcut listener
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPageLoaded(true);
     }, 100);
-    return () => clearTimeout(timer);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        setIsAdminOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Open Full Case Study with position preservation
@@ -140,6 +154,7 @@ export function AppContent() {
           project={activeCaseStudy}
           onBack={handleCloseCaseStudy}
           onSelectNextProject={(next) => handleOpenCaseStudy(next)}
+          onOpenInquiry={(topic) => handleOpenInquiry(topic)}
         />
       ) : (
         <>
@@ -209,8 +224,11 @@ export function AppContent() {
           {/* 16. Start a Project High-Voltage Red Section */}
           <StartProjectCTA onOpenInquiry={(intent) => handleOpenInquiry(intent)} />
 
-          {/* 17. Production Footer */}
-          <Footer onNavigate={handleNavigate} />
+          {/* 17. Production Footer with Admin Trigger */}
+          <Footer
+            onNavigate={handleNavigate}
+            onOpenAdmin={() => setIsAdminOpen(true)}
+          />
         </>
       )}
 
@@ -229,6 +247,12 @@ export function AppContent() {
 
       {/* Touch-Optimized Sticky Bottom Action for Mobile */}
       <StickyMobileCTA onOpenInquiry={() => handleOpenInquiry()} />
+
+      {/* Admin CRM & CMS Configuration Dashboard */}
+      <AdminDashboard
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+      />
     </div>
   );
 }

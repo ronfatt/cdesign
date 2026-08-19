@@ -4,9 +4,10 @@ import { useCursor } from '../../context/CursorContext';
 
 interface FooterProps {
   onNavigate: (sectionId: string) => void;
+  onOpenAdmin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdmin }) => {
   const { setCursorVariant, resetCursor } = useCursor();
 
   const scrollToTop = () => {
@@ -101,10 +102,21 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Bottom Bar with Back to Top */}
+        {/* Bottom Bar with Back to Top & Admin Access */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-neutral-500">
-          <div className="text-center sm:text-left">
-            © {new Date().getFullYear()} C DESIGN PRODUCTION SDN. BHD. ALL RIGHTS RESERVED.
+          <div className="flex items-center space-x-3 text-center sm:text-left">
+            <span>© {new Date().getFullYear()} C DESIGN PRODUCTION SDN. BHD.</span>
+            {onOpenAdmin && (
+              <>
+                <span>·</span>
+                <button
+                  onClick={onOpenAdmin}
+                  className="text-neutral-500 hover:text-brand-red transition-colors uppercase font-bold"
+                >
+                  [ADMIN CRM]
+                </button>
+              </>
+            )}
           </div>
 
           <button
