@@ -64,7 +64,7 @@ export function AppContent() {
     };
   }, []);
 
-  // Open Full Case Study with position preservation
+  // Open Full Case Study with snappy transition
   const handleOpenCaseStudy = (project: Project) => {
     previousScrollY.current = window.scrollY;
     setIsWiping(true);
@@ -73,11 +73,11 @@ export function AppContent() {
       setActiveCaseStudy(project);
       setTimeout(() => {
         setIsWiping(false);
-      }, 300);
-    }, 400);
+      }, 150);
+    }, 220);
   };
 
-  // Close Case Study and restore scroll position
+  // Close Case Study and restore scroll position instantly
   const handleCloseCaseStudy = () => {
     setIsWiping(true);
 
@@ -86,29 +86,24 @@ export function AppContent() {
       setTimeout(() => {
         window.scrollTo({ top: previousScrollY.current, behavior: 'instant' as any });
         setIsWiping(false);
-      }, 250);
-    }, 400);
+      }, 150);
+    }, 200);
   };
 
-  // Smooth Navigation with Red Page Wipe Transition
+  // Direct & Instant Smooth Navigation (No blocking wipe pause)
   const handleNavigate = (sectionId: string) => {
     if (activeCaseStudy) {
       setActiveCaseStudy(null);
     }
     setIsMenuOpen(false);
-    setIsWiping(true);
 
-    setTimeout(() => {
-      const el = document.getElementById(sectionId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      } else if (sectionId === 'hero') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      setTimeout(() => {
-        setIsWiping(false);
-      }, 350);
-    }, 450);
+    // Instant direct scroll to section
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else if (sectionId === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleOpenInquiry = (topic?: string) => {
@@ -206,8 +201,8 @@ export function AppContent() {
           {/* 10. Creativity With Purpose (Split Screen Impact Switcher) */}
           <CreativityWithPurpose />
 
-          {/* 11. Experimental Image Trail Canvas (Desktop Only) */}
-          <ImageTrailSection />
+          {/* 11. Production Excellence Section */}
+          <ImageTrailSection onOpenShowreel={() => setIsShowreelOpen(true)} />
 
           {/* 12. Kinetic Marquee Strip */}
           <KineticMarquee />

@@ -50,7 +50,7 @@ export const HorizontalStories: React.FC<HorizontalStoriesProps> = ({ onSelectPr
     <section
       ref={targetRef}
       className={`relative bg-brand-black text-white ${
-        isTouch ? 'py-16' : 'h-[300vh]'
+        isTouch ? 'py-16' : 'h-[220vh]'
       }`}
     >
       {/* Container */}

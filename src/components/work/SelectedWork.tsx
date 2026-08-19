@@ -155,11 +155,11 @@ export const SelectedWork: React.FC<SelectedWorkProps> = ({ onSelectProject }) =
               return (
                 <motion.div
                   key={project.id}
-                  initial={{ opacity: 0, y: 25 }}
+                  initial={{ opacity: 0, y: 18 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.6, delay: isTouch ? 0.05 : (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ skewY: isTouch ? '0deg' : `${velocitySkew * 0.3}deg` }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.4, delay: isTouch ? 0.02 : (index % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ skewY: isTouch ? '0deg' : `${velocitySkew * 0.2}deg` }}
                   className={`${gridSpan} group cursor-pointer relative active:scale-[0.98] transition-transform`}
                   onClick={() => onSelectProject(project)}
                   onMouseEnter={() => handleMouseEnter(project)}
@@ -171,8 +171,8 @@ export const SelectedWork: React.FC<SelectedWorkProps> = ({ onSelectProject }) =
                     <motion.div
                       initial={maskInitial}
                       whileInView={maskAnimate}
-                      viewport={{ once: true, margin: '-40px' }}
-                      transition={{ duration: 0.75, delay: 0.1, ease: [0.76, 0, 0.24, 1] }}
+                      viewport={{ once: true, margin: '-20px' }}
+                      transition={{ duration: 0.5, delay: 0.05, ease: [0.76, 0, 0.24, 1] }}
                       className="absolute inset-0 z-20 bg-brand-red pointer-events-none"
                     />
 

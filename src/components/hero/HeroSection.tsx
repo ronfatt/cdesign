@@ -68,13 +68,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <motion.div
               initial={{ scaleX: 0 }}
               animate={isLoaded ? { scaleX: 1 } : { scaleX: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
               className="w-6 sm:w-8 h-[2px] bg-brand-red origin-left"
             />
             <motion.span
               initial={{ opacity: 0, x: -10 }}
               animate={isLoaded ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
-              transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
               className="text-[10px] sm:text-xs font-mono font-bold tracking-[0.2em] sm:tracking-[0.25em] text-neutral-600 uppercase"
             >
               CREATIVE PRODUCTION · BORNEO
@@ -88,7 +88,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <motion.div
                 initial={{ y: '110%' }}
                 animate={isLoaded ? { y: '0%' } : { y: '110%' }}
-                transition={{ duration: 0.75, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
               >
                 WE CREATE
               </motion.div>
@@ -99,7 +99,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <motion.div
                 initial={{ y: '110%' }}
                 animate={isLoaded ? { y: '0%' } : { y: '110%' }}
-                transition={{ duration: 0.75, delay: 0.48, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
               >
                 EXPERIENCES
               </motion.div>
@@ -110,7 +110,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <motion.div
                 initial={{ y: '110%' }}
                 animate={isLoaded ? { y: '0%' } : { y: '110%' }}
-                transition={{ duration: 0.75, delay: 0.62, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 className="flex items-center space-x-2 sm:space-x-3 flex-wrap"
               >
                 <span>THAT</span>
@@ -120,7 +120,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <motion.span
                     initial={{ scaleX: 0 }}
                     animate={isLoaded ? { scaleX: 1 } : { scaleX: 0 }}
-                    transition={{ duration: 0.6, delay: 0.95, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.45, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute -bottom-0.5 sm:-bottom-1 left-0 right-0 h-[3px] sm:h-[4px] bg-brand-red origin-left"
                   />
                 </span>
@@ -129,27 +129,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          {/* Supporting Text */}
+          {/* Supporting Statement */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.7, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="border-l-2 border-brand-red pl-3.5 sm:pl-6 max-w-lg space-y-1"
+            initial={{ opacity: 0, y: 15 }}
+            animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+            transition={{ duration: 0.5, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-2 max-w-xl"
           >
-            <p className="text-sm sm:text-lg font-bold text-brand-black tracking-tight">
+            <p className="text-base sm:text-2xl font-bold tracking-tight text-neutral-900 font-editorial-sub">
               Born in Borneo. Creating Beyond Borders.
             </p>
-            <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed">
-              We design stadium-scale conventions, cinematic films, and transformative cultural narratives from Tawau, Sabah for the global stage.
+            <p className="text-xs sm:text-base text-neutral-600 font-medium leading-relaxed">
+              We are a premier creative production studio engineering stadium-scale festivals, cinematic films, brand systems, and cultural landmarks from Tawau, Sabah across Asia.
             </p>
           </motion.div>
 
-          {/* Action Buttons (Touch-Optimized Layout) */}
+          {/* Action CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.7, delay: 0.95, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2"
+            initial={{ opacity: 0, y: 15 }}
+            animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+            transition={{ duration: 0.5, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2"
           >
             <MagneticButton
               variant="primary"

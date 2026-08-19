@@ -12,17 +12,16 @@ export function useSmoothScroll() {
     }
 
     const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // smooth exponential ease
+      duration: 0.75, // Snappy & direct, zero floaty lag
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -12 * t)), // Crisp exponential ease
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.95,
-      touchMultiplier: 1.5,
+      wheelMultiplier: 1.05,
+      touchMultiplier: 1.2,
       infinite: false,
     });
 
-    // RAF loop
     let rafId: number;
     function raf(time: number) {
       lenis.raf(time);
