@@ -101,9 +101,11 @@ export const TeamBTSCollage: React.FC = () => {
             className="md:col-span-4 bg-brand-light rounded-card p-6 sm:p-8 flex flex-col justify-between border border-neutral-200"
           >
             <div className="space-y-4">
-              <span className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center text-xs font-bold font-display">
-                C
-              </span>
+              <img
+                src="/logo.png"
+                alt="CDesign Production Emblem"
+                className="w-9 h-9 object-contain rounded-full shadow-sm"
+              />
               <h4 className="font-display text-2xl font-bold uppercase tracking-tight text-brand-black">
                 OUR PRODUCTION CREED
               </h4>

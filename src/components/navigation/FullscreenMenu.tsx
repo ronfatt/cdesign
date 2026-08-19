@@ -92,9 +92,13 @@ export const FullscreenMenu: React.FC<FullscreenMenuProps> = ({
           {/* Top Bar */}
           <div className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-[#EAEAEA] relative z-20">
             <div className="flex items-center space-x-3">
-              <span className="w-3 h-3 bg-brand-red inline-block" />
+              <img
+                src="/logo.png"
+                alt="CDesign Production Logo"
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-full shadow-sm"
+              />
               <span className="font-display font-black text-xl tracking-tight uppercase">
-                C DESIGN PRODUCTION
+                CDesign Production
               </span>
             </div>
 

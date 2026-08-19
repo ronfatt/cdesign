@@ -21,11 +21,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Col 1: Brand & Creed */}
           <div className="md:col-span-5 space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-brand-red flex items-center justify-center text-white font-black text-sm font-display rounded-subtle">
-                C
-              </div>
+              <img
+                src="/logo.png"
+                alt="CDesign Production Logo"
+                className="w-9 h-9 object-contain rounded-full shadow-sm"
+              />
               <span className="font-display font-black text-2xl tracking-tight uppercase">
-                C DESIGN PRODUCTION
+                CDesign Production
               </span>
             </div>
 

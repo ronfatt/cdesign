@@ -72,12 +72,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           onMouseLeave={resetCursor}
           className="flex items-center space-x-3 text-left group"
         >
-          <div className="w-6 h-6 sm:w-7 sm:h-7 bg-brand-red flex items-center justify-center text-white font-black text-xs sm:text-sm font-display rounded-subtle group-hover:scale-105 transition-transform duration-300">
-            C
-          </div>
+          <img
+            src="/logo.png"
+            alt="CDesign Production Logo"
+            className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full shadow-sm group-hover:scale-105 transition-transform duration-300"
+          />
           <div>
             <span className="font-display font-black text-lg sm:text-xl tracking-tight uppercase text-brand-black block leading-none">
-              C DESIGN
+              CDesign
             </span>
             <span className="text-[9px] font-mono tracking-widest text-neutral-500 uppercase block mt-0.5">
               Production · Tawau
