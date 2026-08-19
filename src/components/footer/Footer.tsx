@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUp, MapPin } from 'lucide-react';
+import { ArrowUp, MapPin, Phone, Mail } from 'lucide-react';
 import { useCursor } from '../../context/CursorContext';
 
 interface FooterProps {
@@ -14,12 +14,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   };
 
   return (
-    <footer className="bg-brand-black text-white pt-20 pb-12 border-t border-neutral-800 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+    <footer className="bg-brand-black text-white pt-16 sm:pt-20 pb-12 sm:pb-16 border-t border-neutral-800 relative overflow-hidden pb-[max(3rem,env(safe-area-inset-bottom))]">
+      <div className="max-w-7xl mx-auto px-5 sm:px-10 space-y-12 sm:space-y-16">
         {/* Top Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-neutral-800">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-12 pb-12 sm:pb-16 border-b border-neutral-800">
           {/* Col 1: Brand & Creed */}
-          <div className="md:col-span-5 space-y-6">
+          <div className="md:col-span-5 space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-3">
               <img
                 src="/logo.png"
@@ -31,29 +31,29 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </span>
             </div>
 
-            <p className="text-base text-neutral-300 font-medium max-w-sm leading-relaxed">
+            <p className="text-sm sm:text-base text-neutral-300 font-medium max-w-sm leading-relaxed">
               We create experiences that move people. Born in Borneo. Creating beyond borders.
             </p>
 
-            <div className="flex items-center space-x-3 text-xs font-mono text-neutral-400">
-              <MapPin className="w-3.5 h-3.5 text-brand-red" />
+            <div className="flex items-center space-x-2 text-xs font-mono text-neutral-400">
+              <MapPin className="w-3.5 h-3.5 text-brand-red flex-shrink-0" />
               <span>TAWAU · SABAH · MALAYSIA (04°14'N · 117°53'E)</span>
             </div>
           </div>
 
           {/* Col 2: Navigation Links */}
-          <div className="md:col-span-3 space-y-4">
+          <div className="md:col-span-3 space-y-3 sm:space-y-4">
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-red block">
               NAVIGATION
             </span>
-            <ul className="space-y-2 text-xs font-bold uppercase tracking-wider text-neutral-300">
+            <ul className="grid grid-cols-2 md:grid-cols-1 gap-2 text-xs font-bold uppercase tracking-wider text-neutral-300">
               {['hero', 'work', 'services', 'originals', 'impact', 'about'].map((id) => (
                 <li key={id}>
                   <button
                     onClick={() => onNavigate(id)}
                     onMouseEnter={() => setCursorVariant('link')}
                     onMouseLeave={resetCursor}
-                    className="hover:text-brand-red transition-colors"
+                    className="hover:text-brand-red active:text-brand-red transition-colors py-1 min-h-[32px] flex items-center"
                   >
                     {id.toUpperCase()}
                   </button>
@@ -62,33 +62,48 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Col 3: Contact & Socials */}
-          <div className="md:col-span-4 space-y-4">
+          {/* Col 3: Direct Contact Links with Tap-to-Call / Email */}
+          <div className="md:col-span-4 space-y-3 sm:space-y-4">
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-red block">
-              HEADQUARTERS & ENQUIRIES
+              HEADQUARTERS & DIRECT ACCESS
             </span>
             <div className="space-y-2 text-xs text-neutral-300">
               <p className="font-medium text-white">C Design Production Sdn. Bhd.</p>
               <p>Tawau Waterfront Creative Quarter, 91000 Tawau, Sabah, Malaysia</p>
-              <p className="text-neutral-400 pt-2 font-mono">hello@cdesignproduction.com</p>
-              <p className="text-neutral-400 font-mono">+60 (89) 772-888</p>
+              
+              <div className="pt-2 flex flex-col space-y-1.5 font-mono">
+                <a
+                  href="mailto:hello@cdesignproduction.com"
+                  className="inline-flex items-center space-x-2 text-neutral-300 hover:text-brand-red active:text-brand-red transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5 text-brand-red" />
+                  <span>hello@cdesignproduction.com</span>
+                </a>
+                <a
+                  href="tel:+6089772888"
+                  className="inline-flex items-center space-x-2 text-neutral-300 hover:text-brand-red active:text-brand-red transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5 text-brand-red" />
+                  <span>+60 (89) 772-888</span>
+                </a>
+              </div>
             </div>
 
-            <div className="pt-4 flex items-center space-x-4 text-xs font-mono">
-              <a href="#instagram" className="hover:text-brand-red transition-colors">INSTAGRAM</a>
+            <div className="pt-3 flex flex-wrap items-center gap-3 text-xs font-mono">
+              <a href="#instagram" className="hover:text-brand-red font-bold py-1">INSTAGRAM</a>
               <span>·</span>
-              <a href="#facebook" className="hover:text-brand-red transition-colors">FACEBOOK</a>
+              <a href="#facebook" className="hover:text-brand-red font-bold py-1">FACEBOOK</a>
               <span>·</span>
-              <a href="#youtube" className="hover:text-brand-red transition-colors">YOUTUBE</a>
+              <a href="#youtube" className="hover:text-brand-red font-bold py-1">YOUTUBE</a>
               <span>·</span>
-              <a href="#tiktok" className="hover:text-brand-red transition-colors">TIKTOK</a>
+              <a href="#tiktok" className="hover:text-brand-red font-bold py-1">TIKTOK</a>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar with Back to Top */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-mono text-neutral-500">
-          <div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-neutral-500">
+          <div className="text-center sm:text-left">
             © {new Date().getFullYear()} C DESIGN PRODUCTION SDN. BHD. ALL RIGHTS RESERVED.
           </div>
 
@@ -96,10 +111,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             onClick={scrollToTop}
             onMouseEnter={() => setCursorVariant('link')}
             onMouseLeave={resetCursor}
-            className="group flex items-center space-x-2 px-4 py-2 rounded bg-neutral-900 hover:bg-brand-red text-white transition-colors"
+            className="flex items-center space-x-2 px-4 py-2.5 rounded bg-neutral-900 hover:bg-brand-red text-white active:scale-95 transition-all min-h-[44px]"
           >
             <span>BACK TO TOP</span>
-            <ArrowUp className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
+            <ArrowUp className="w-4 h-4" />
           </button>
         </div>
       </div>

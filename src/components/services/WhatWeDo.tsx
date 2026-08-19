@@ -19,8 +19,8 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
   const isTouch = useIsTouchDevice();
 
   return (
-    <section id="services" className="py-24 sm:py-32 bg-white relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 sm:px-10">
+    <section id="services" className="py-20 sm:py-32 bg-white relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-5 sm:px-10">
         {/* Section Header */}
         <SectionHeader
           number="06"
@@ -135,27 +135,34 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
             })}
           </div>
         ) : (
-          /* Mobile Touch Accordion */
+          /* Mobile Premium Touch Accordion (Min touch target 64px) */
           <div className="divide-y divide-neutral-200 border-y border-neutral-200">
             {servicesData.map((service, index) => {
               const isExpanded = expandedMobileIndex === index;
               return (
-                <div key={service.id} className="py-5">
+                <div key={service.id} className="py-2">
                   <button
                     onClick={() => setExpandedMobileIndex(isExpanded ? null : index)}
-                    className="w-full flex items-center justify-between text-left"
+                    className="w-full min-h-[64px] py-3 flex items-center justify-between text-left active:bg-neutral-50 rounded px-2 transition-colors"
                   >
-                    <div className="flex items-baseline space-x-4">
+                    <div className="flex items-baseline space-x-3.5">
                       <span className="font-mono text-xs text-brand-red font-bold">{service.number}</span>
-                      <span className="font-display text-2xl font-bold uppercase text-brand-black">
-                        {service.title}
-                      </span>
+                      <div>
+                        <span className="font-display text-2xl font-bold uppercase text-brand-black block leading-none">
+                          {service.title}
+                        </span>
+                        <span className="text-[11px] text-neutral-500 font-medium block mt-1">
+                          {service.tagline}
+                        </span>
+                      </div>
                     </div>
-                    <ChevronDown
-                      className={`w-5 h-5 text-neutral-600 transition-transform duration-300 ${
-                        isExpanded ? 'rotate-180 text-brand-red' : ''
-                      }`}
-                    />
+                    <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0 ml-2">
+                      <ChevronDown
+                        className={`w-4 h-4 text-neutral-700 transition-transform duration-300 ${
+                          isExpanded ? 'rotate-180 text-brand-red' : ''
+                        }`}
+                      />
+                    </div>
                   </button>
 
                   <AnimatePresence>
@@ -165,25 +172,31 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                        className="pt-4 space-y-4 overflow-hidden"
+                        className="px-2 pt-2 pb-5 space-y-4 overflow-hidden"
                       >
-                        <div className="h-44 rounded-card overflow-hidden">
+                        <div className="h-44 rounded-card overflow-hidden shadow-md">
                           <img src={service.bgImage} alt={service.title} className="w-full h-full object-cover" />
                         </div>
-                        <p className="text-xs text-neutral-600 leading-relaxed font-medium">{service.description}</p>
-                        <div className="space-y-1.5 pt-2">
-                          {service.capabilities.map((cap, idx) => (
-                            <div key={idx} className="flex items-center space-x-2 text-xs font-semibold text-neutral-800">
-                              <Check className="w-3.5 h-3.5 text-brand-red" />
+                        
+                        <p className="text-xs text-neutral-700 leading-relaxed font-medium">
+                          {service.description}
+                        </p>
+
+                        <div className="space-y-2 pt-1">
+                          {service.capabilities.slice(0, 4).map((cap, idx) => (
+                            <div key={idx} className="flex items-center space-x-2 text-xs font-semibold text-neutral-800 bg-neutral-50 p-2 rounded">
+                              <Check className="w-3.5 h-3.5 text-brand-red flex-shrink-0" />
                               <span>{cap}</span>
                             </div>
                           ))}
                         </div>
+
                         <button
                           onClick={() => onOpenInquiry(service.title)}
-                          className="w-full mt-3 py-3 bg-brand-red text-white text-xs font-bold uppercase rounded"
+                          className="w-full h-12 bg-brand-red text-white text-xs font-bold uppercase tracking-wider rounded flex items-center justify-center space-x-2 active:scale-95 transition-transform shadow-md"
                         >
-                          INQUIRE ABOUT {service.title}
+                          <span>INQUIRE ABOUT {service.title}</span>
+                          <ArrowRight className="w-4 h-4" />
                         </button>
                       </motion.div>
                     )}
@@ -195,16 +208,15 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
         )}
       </div>
 
-      {/* Desktop Fullscreen Takeover Modal Preview (Requirement 17, 18) */}
+      {/* Desktop Fullscreen Takeover Modal Preview */}
       <AnimatePresence>
-        {activeFullscreenIndex !== null && (
+        {activeFullscreenIndex !== null && !isTouch && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-brand-black/95 text-white flex flex-col justify-between p-6 sm:p-12 overflow-y-auto"
           >
-            {/* Top Bar */}
             <div className="flex items-center justify-between border-b border-neutral-800 pb-6 z-20">
               <div className="flex items-center space-x-3">
                 <span className="font-mono text-xs font-bold text-brand-red">
@@ -224,7 +236,6 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
               </button>
             </div>
 
-            {/* Background Full Bleed Media */}
             <div className="absolute inset-0 z-0">
               <img
                 src={servicesData[activeFullscreenIndex].bgImage}
@@ -234,7 +245,6 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
             </div>
 
-            {/* Center Content */}
             <div className="relative z-10 max-w-4xl py-12 space-y-6">
               <span className="px-3 py-1 bg-brand-red text-white text-[10px] font-black uppercase tracking-widest rounded-subtle">
                 {servicesData[activeFullscreenIndex].accentText}
@@ -262,7 +272,6 @@ export const WhatWeDo: React.FC<WhatWeDoProps> = ({ onOpenInquiry }) => {
               </div>
             </div>
 
-            {/* Bottom Action Bar */}
             <div className="relative z-10 flex items-center justify-between pt-6 border-t border-neutral-800">
               <span className="text-xs font-mono text-neutral-400">
                 PRODUCING IN SABAH & NATIONWIDE

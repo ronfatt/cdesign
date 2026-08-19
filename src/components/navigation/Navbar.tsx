@@ -36,12 +36,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      setIsScrolled(currentScrollY > 40);
+      setIsScrolled(currentScrollY > 30);
 
-      if (currentScrollY > lastScrollY.current && currentScrollY > 150) {
-        setIsScrollingDown(true); // scrolling down -> compress
+      if (currentScrollY > lastScrollY.current && currentScrollY > 120) {
+        setIsScrollingDown(true);
       } else {
-        setIsScrollingDown(false); // scrolling up -> expand
+        setIsScrollingDown(false);
       }
 
       lastScrollY.current = currentScrollY;
@@ -55,22 +55,22 @@ export const Navbar: React.FC<NavbarProps> = ({
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
-      transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-400 ${
+      transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 pt-[env(safe-area-inset-top)] ${
         isScrolled
           ? isScrollingDown
-            ? 'py-2.5 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 shadow-sm'
-            : 'py-3.5 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 shadow-sm'
-          : 'py-6 bg-transparent border-b border-transparent'
+            ? 'py-2 sm:py-2.5 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 shadow-sm'
+            : 'py-3 sm:py-3.5 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 shadow-sm'
+          : 'py-4 sm:py-6 bg-transparent border-b border-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between">
-        {/* Brand Logo with Initial Load Animation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-10 flex items-center justify-between">
+        {/* Brand Logo with Official Circular Emblem */}
         <button
           onClick={() => onNavigate('hero')}
           onMouseEnter={() => setCursorVariant('link')}
           onMouseLeave={resetCursor}
-          className="flex items-center space-x-3 text-left group"
+          className="flex items-center space-x-2.5 sm:space-x-3 text-left group active:scale-98 transition-transform"
         >
           <img
             src="/logo.png"
@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full shadow-sm group-hover:scale-105 transition-transform duration-300"
           />
           <div>
-            <span className="font-display font-black text-lg sm:text-xl tracking-tight uppercase text-brand-black block leading-none">
+            <span className="font-display font-black text-base sm:text-xl tracking-tight uppercase text-brand-black block leading-none">
               CDesign
             </span>
             <span className="text-[9px] font-mono tracking-widest text-neutral-500 uppercase block mt-0.5">
@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right CTA & Menu Trigger */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2.5 sm:space-x-4">
           <div className="hidden sm:block">
             <MagneticButton
               variant="primary"
@@ -140,10 +140,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onOpenMenu}
             onMouseEnter={() => setCursorVariant('link')}
             onMouseLeave={resetCursor}
-            className="flex items-center space-x-2 p-2 rounded border border-neutral-300 hover:border-brand-red text-brand-black hover:text-brand-red transition-all duration-300"
+            className="flex items-center space-x-1.5 p-2 sm:px-3 sm:py-2 rounded border border-neutral-300 hover:border-brand-red text-brand-black hover:text-brand-red active:scale-95 transition-all duration-200 min-w-[44px] min-h-[44px] justify-center"
             aria-label="Open Fullscreen Menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-5 h-5 text-brand-black" />
             <span className="text-xs font-bold uppercase tracking-wider hidden lg:inline">MENU</span>
           </button>
         </div>

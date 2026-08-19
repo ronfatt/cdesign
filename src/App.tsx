@@ -23,6 +23,7 @@ import { TestimonialSection } from './components/testimonials/TestimonialSection
 import { StartProjectCTA } from './components/cta/StartProjectCTA';
 import { ProgressiveInquiryModal } from './components/contact/ProgressiveInquiryModal';
 import { Footer } from './components/footer/Footer';
+import { StickyMobileCTA } from './components/common/StickyMobileCTA';
 import { useSmoothScroll } from './hooks/useSmoothScroll';
 import type { Project } from './types';
 
@@ -225,6 +226,9 @@ export function AppContent() {
         onClose={() => setIsInquiryOpen(false)}
         initialTopic={inquiryTopic}
       />
+
+      {/* Touch-Optimized Sticky Bottom Action for Mobile */}
+      <StickyMobileCTA onOpenInquiry={() => handleOpenInquiry()} />
     </div>
   );
 }
