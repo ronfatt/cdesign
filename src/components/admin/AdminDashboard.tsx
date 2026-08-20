@@ -101,6 +101,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
   useEffect(() => {
     if (isOpen) {
+      document.body.classList.add('admin-open');
       setProjects(getStoredCMSProjects());
       setEvents(getStoredCMSEvents());
       setStories(getStoredCMSStories());
@@ -114,7 +115,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       }
       setUsers(getStoredUsers());
       setSettings(getStoredSettings());
+    } else {
+      document.body.classList.remove('admin-open');
     }
+
+    return () => {
+      document.body.classList.remove('admin-open');
+    };
   }, [isOpen]);
 
   const notify = (msg: string) => {
@@ -377,7 +384,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-neutral-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden select-none">
+    <div className="admin-dashboard-container fixed inset-0 z-50 bg-neutral-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden select-none">
       <div className="w-full max-w-7xl h-[95vh] bg-white rounded-xl shadow-2xl flex overflow-hidden border border-neutral-200">
         {/* Left Sidebar Navigation */}
         <aside className="w-64 bg-neutral-900 text-white flex flex-col justify-between p-4 flex-shrink-0 border-r border-neutral-800">

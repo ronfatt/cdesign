@@ -159,6 +159,7 @@ export function AppContent() {
             onNavigate={handleNavigate}
             onOpenMenu={() => setIsMenuOpen(true)}
             onOpenInquiry={() => handleOpenInquiry()}
+            onOpenAdmin={() => setIsAdminOpen(true)}
             isLoaded={isPageLoaded}
           />
 
@@ -168,6 +169,7 @@ export function AppContent() {
             onClose={() => setIsMenuOpen(false)}
             onNavigate={handleNavigate}
             onOpenInquiry={() => handleOpenInquiry()}
+            onOpenAdmin={() => setIsAdminOpen(true)}
           />
 
           {/* 02. Hero Section with Staged Entrance & Layered Parallax */}

@@ -7,6 +7,7 @@ import { MagneticButton } from '../common/MagneticButton';
 interface NavbarProps {
   onOpenMenu: () => void;
   onOpenInquiry: () => void;
+  onOpenAdmin?: () => void;
   activeSection: string;
   onNavigate: (sectionId: string) => void;
   isLoaded?: boolean;
@@ -24,6 +25,7 @@ const navLinks = [
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenMenu,
   onOpenInquiry,
+  onOpenAdmin,
   activeSection,
   onNavigate,
   isLoaded = true,
@@ -123,7 +125,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right CTA & Menu Trigger */}
-        <div className="flex items-center space-x-2.5 sm:space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          {onOpenAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              onMouseEnter={() => setCursorVariant('link')}
+              onMouseLeave={resetCursor}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-neutral-600 hover:text-brand-red bg-neutral-100 hover:bg-neutral-200/80 rounded border border-neutral-200 transition-colors"
+              title="Open Admin Dashboard"
+            >
+              ADMIN
+            </button>
+          )}
+
           <div className="hidden sm:block">
             <MagneticButton
               variant="primary"

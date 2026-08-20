@@ -70,14 +70,32 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom cursor hide default cursor on non-touch devices */
+/* Custom cursor hide default cursor on non-touch devices except inside Admin & Inputs */
 @media (hover: hover) and (pointer: fine) {
-  .custom-cursor-active,
-  .custom-cursor-active a,
-  .custom-cursor-active button,
-  .custom-cursor-active [role="button"] {
+  .custom-cursor-active:not(.admin-open),
+  .custom-cursor-active:not(.admin-open) a:not(.admin-dashboard-container *),
+  .custom-cursor-active:not(.admin-open) button:not(.admin-dashboard-container *),
+  .custom-cursor-active:not(.admin-open) [role="button"]:not(.admin-dashboard-container *) {
     cursor: none !important;
   }
+}
+
+/* Force standard visible system cursor inside Admin Dashboard */
+.admin-dashboard-container,
+.admin-dashboard-container * {
+  cursor: auto !important;
+}
+
+.admin-dashboard-container button,
+.admin-dashboard-container a,
+.admin-dashboard-container select,
+.admin-dashboard-container [role="button"] {
+  cursor: pointer !important;
+}
+
+.admin-dashboard-container input,
+.admin-dashboard-container textarea {
+  cursor: text !important;
 }
 
 /* Custom Scrollbar */

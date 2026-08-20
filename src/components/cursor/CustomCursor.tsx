@@ -24,7 +24,14 @@ export const CustomCursor: React.FC = () => {
       mouseY.set(e.clientY);
 
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable ||
+          target.closest('.admin-dashboard-container'))
+      ) {
         setIsOverInput(true);
       } else {
         setIsOverInput(false);

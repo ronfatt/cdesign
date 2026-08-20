@@ -8,6 +8,7 @@ interface FullscreenMenuProps {
   onClose: () => void;
   onNavigate: (sectionId: string) => void;
   onOpenInquiry: () => void;
+  onOpenAdmin?: () => void;
 }
 
 interface MenuItem {
@@ -67,6 +68,7 @@ export const FullscreenMenu: React.FC<FullscreenMenuProps> = ({
   onClose,
   onNavigate,
   onOpenInquiry,
+  onOpenAdmin,
 }) => {
   const { setCursorVariant, resetCursor } = useCursor();
 
@@ -93,15 +95,31 @@ export const FullscreenMenu: React.FC<FullscreenMenuProps> = ({
               </span>
             </div>
 
-            <button
-              onClick={onClose}
-              onMouseEnter={() => setCursorVariant('link')}
-              onMouseLeave={resetCursor}
-              className="flex items-center space-x-2 text-xs font-bold uppercase tracking-widest px-3.5 py-2 rounded border border-neutral-300 hover:border-brand-red hover:text-brand-red active:scale-95 transition-all min-h-[44px]"
-            >
-              <span>CLOSE</span>
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {onOpenAdmin && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenAdmin();
+                  }}
+                  onMouseEnter={() => setCursorVariant('link')}
+                  onMouseLeave={resetCursor}
+                  className="flex items-center space-x-1.5 text-xs font-mono font-bold uppercase tracking-wider px-3.5 py-2 rounded bg-neutral-100 hover:bg-neutral-200 text-brand-black border border-neutral-300 transition-colors min-h-[44px]"
+                >
+                  <span>ADMIN / LOGIN</span>
+                </button>
+              )}
+
+              <button
+                onClick={onClose}
+                onMouseEnter={() => setCursorVariant('link')}
+                onMouseLeave={resetCursor}
+                className="flex items-center space-x-2 text-xs font-bold uppercase tracking-widest px-3.5 py-2 rounded border border-neutral-300 hover:border-brand-red hover:text-brand-red active:scale-95 transition-all min-h-[44px]"
+              >
+                <span>CLOSE</span>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Menu Items List */}
@@ -152,6 +170,18 @@ export const FullscreenMenu: React.FC<FullscreenMenuProps> = ({
                 <span>START A PROJECT</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+
+              {onOpenAdmin && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenAdmin();
+                  }}
+                  className="h-12 px-5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-mono font-bold uppercase tracking-wider rounded flex items-center justify-center space-x-2 shadow-md active:scale-95 transition-transform"
+                >
+                  <span>ADMIN DASHBOARD / LOGIN</span>
+                </button>
+              )}
 
               <a
                 href="https://wa.me/60128188188?text=Hello%20C%20Design%20Production%2C%20I%20would%20like%20to%20inquire%20about%20a%20project."
