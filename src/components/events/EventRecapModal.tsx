@@ -14,6 +14,30 @@ export const EventRecapModal: React.FC<EventRecapModalProps> = ({ event, onClose
 
   if (!event) return null;
 
+  // Auto-normalize Google Drive, Dropbox, and CDN direct image links
+  const normalizeImageUrl = (url: string) => {
+    if (!url) return url;
+    // Google Drive share link format: https://drive.google.com/file/d/FILE_ID/view...
+    if (url.includes('drive.google.com/file/d/')) {
+      const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+    }
+    // Google Drive uc export format
+    if (url.includes('drive.google.com/open?id=')) {
+      const match = url.match(/id=([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+    }
+    // Dropbox direct link format
+    if (url.includes('dropbox.com') && url.includes('?dl=0')) {
+      return url.replace('?dl=0', '?raw=1');
+    }
+    return url;
+  };
+
   // Extract YouTube embed URL if applicable
   const getEmbedVideoUrl = (url?: string) => {
     if (!url) return null;
@@ -33,7 +57,8 @@ export const EventRecapModal: React.FC<EventRecapModalProps> = ({ event, onClose
   };
 
   const embedUrl = getEmbedVideoUrl(event.highlightVideoUrl);
-  const photos = event.galleryImages && event.galleryImages.length > 0 ? event.galleryImages : [event.heroImage, event.poster];
+  const rawPhotos = event.galleryImages && event.galleryImages.length > 0 ? event.galleryImages : [event.heroImage, event.poster];
+  const photos = rawPhotos.map(normalizeImageUrl);
 
   return (
     <div className="fixed inset-0 z-50 bg-neutral-950/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden select-none">
@@ -209,14 +234,29 @@ export const EventRecapModal: React.FC<EventRecapModalProps> = ({ event, onClose
 
           {/* 4. HIGH-RESOLUTION PHOTO SHOWCASE GALLERY */}
           <div className="space-y-4 pt-4 border-t border-neutral-200">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="font-mono text-xs font-bold text-brand-red uppercase block">PHOTO SHOWCASE</span>
                 <h4 className="font-display text-xl font-black uppercase text-brand-black">
-                  EVENT GALLERY ({photos.length} PHOTOS)
+                  EVENT GALLERY ({photos.length} HIGHLIGHT PHOTOS)
                 </h4>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">CLICK TO ZOOM</span>
+
+              <div className="flex items-center space-x-3">
+                {event.fullAlbumUrl && (
+                  <a
+                    href={event.fullAlbumUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-neutral-900 hover:bg-brand-red text-white text-xs font-mono font-bold uppercase rounded-lg transition-colors flex items-center space-x-1.5 shadow"
+                    title="Open full cloud album"
+                  >
+                    <span>📂 VIEW FULL GOOGLE DRIVE ALBUM</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                <span className="text-[10px] font-mono text-neutral-400">CLICK TO ZOOM</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

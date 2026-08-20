@@ -2339,11 +2339,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
                 <div>
                   <label className="font-mono font-bold block mb-1">
-                    PHOTO SHOWCASE GALLERY (IMAGE URLS PER LINE)
+                    PHOTO SHOWCASE GALLERY (IMAGE URLS PER LINE — SUPPORTS GOOGLE DRIVE / DIRECT LINKS)
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Paste image URLs separated by line or commas"
+                    placeholder="Paste direct image URLs or Google Drive image links (one per line)"
                     value={editingEvent.galleryImages ? editingEvent.galleryImages.join('\n') : ''}
                     onChange={(e) =>
                       setEditingEvent({
@@ -2354,6 +2354,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                           .filter(Boolean)
                       })
                     }
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono text-[11px]"
+                  />
+                  <span className="text-[10px] font-mono text-neutral-400 block mt-0.5">
+                    💡 Tip: Paste 6–12 highlight photos above for the interactive web gallery.
+                  </span>
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1 text-brand-black">
+                    📂 FULL CLOUD PHOTO ALBUM URL (GOOGLE DRIVE / DROPBOX / FLICKR FOLDER)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://drive.google.com/drive/folders/... (Public folder for delegates to view/download all 500+ photos)"
+                    value={editingEvent.fullAlbumUrl || ''}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, fullAlbumUrl: e.target.value })}
                     className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono text-[11px]"
                   />
                 </div>

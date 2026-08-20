@@ -85,6 +85,7 @@ export interface CMSEvent {
   recapSummary?: string;
   attendees?: string;
   registrationUrl?: string;
+  fullAlbumUrl?: string;
   status: EventStatus;
   organizer: string;
   partners: string[];
