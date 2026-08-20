@@ -80,6 +80,10 @@ export interface CMSEvent {
   venue: string;
   poster: string;
   heroImage: string;
+  highlightVideoUrl?: string;
+  galleryImages?: string[];
+  recapSummary?: string;
+  attendees?: string;
   registrationUrl?: string;
   status: EventStatus;
   organizer: string;

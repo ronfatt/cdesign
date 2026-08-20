@@ -125,6 +125,15 @@ export const initialSeedEvents: CMSEvent[] = [
     venue: 'Tawau Waterfront Arena & Rainforest Pavilions',
     poster: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop',
     heroImage: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1600&auto=format&fit=crop',
+    highlightVideoUrl: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=1200&auto=format&fit=crop'
+    ],
+    recapSummary: 'Featuring delegates and physical theatre masters from 25 countries, combining stadium performance arts with hospital outreach across Sabah.',
+    attendees: '1,500+ International & Local Attendees',
     registrationUrl: 'https://wa.me/60128188188?text=Register%20BICC%202026',
     status: 'UPCOMING',
     organizer: 'C Design Production',
@@ -141,6 +150,14 @@ export const initialSeedEvents: CMSEvent[] = [
     venue: 'C Design Field Camp',
     poster: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=800&auto=format&fit=crop',
     heroImage: 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=1600&auto=format&fit=crop',
+    highlightVideoUrl: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop'
+    ],
+    recapSummary: 'A 3-day deep rainforest immersive lab training 48 emerging cinematographers on RED V-Raptor optics, drone tracking, and indigenous ambient acoustic capture.',
+    attendees: '48 Filmmakers & Sound Recordists',
     status: 'COMPLETED',
     organizer: 'C Design Originals',
     partners: ['RED Cinema Asia', 'Sabah Parks'],

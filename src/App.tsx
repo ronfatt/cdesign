@@ -22,17 +22,20 @@ import { PartnerLogos } from './components/partners/PartnerLogos';
 import { TestimonialSection } from './components/testimonials/TestimonialSection';
 import { StartProjectCTA } from './components/cta/StartProjectCTA';
 import { ProgressiveInquiryModal } from './components/contact/ProgressiveInquiryModal';
+import { EventRecapModal } from './components/events/EventRecapModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { Footer } from './components/footer/Footer';
 import { StickyMobileCTA } from './components/common/StickyMobileCTA';
 import { useSmoothScroll } from './hooks/useSmoothScroll';
 import type { Project } from './types';
+import type { CMSEvent } from './types/crm';
 
 export function AppContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShowreelOpen, setIsShowreelOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeCaseStudy, setActiveCaseStudy] = useState<Project | null>(null);
+  const [activeEventRecap, setActiveEventRecap] = useState<CMSEvent | null>(null);
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [inquiryTopic, setInquiryTopic] = useState<string | undefined>(undefined);
   const [isWiping, setIsWiping] = useState(false);
@@ -244,6 +247,13 @@ export function AppContent() {
 
       {/* Touch-Optimized Sticky Bottom Action for Mobile */}
       <StickyMobileCTA onOpenInquiry={() => handleOpenInquiry()} />
+
+      {/* Public Event Showcase & Video Recap Modal */}
+      <EventRecapModal
+        event={activeEventRecap}
+        onClose={() => setActiveEventRecap(null)}
+        onOpenInquiry={(topic) => handleOpenInquiry(topic)}
+      />
 
       {/* Admin CRM & CMS Configuration Dashboard */}
       <AdminDashboard

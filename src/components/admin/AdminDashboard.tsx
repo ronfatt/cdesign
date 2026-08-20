@@ -35,7 +35,9 @@ import {
   Link2,
   FileText,
   Clapperboard,
+  Play,
 } from 'lucide-react';
+import { EventRecapModal } from '../events/EventRecapModal';
 import {
   getStoredCMSProjects,
   saveCMSProjects,
@@ -108,6 +110,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [editingProject, setEditingProject] = useState<CMSProject | null>(null);
   const [projectStep, setProjectStep] = useState(1);
   const [editingEvent, setEditingEvent] = useState<CMSEvent | null>(null);
+  const [previewEvent, setPreviewEvent] = useState<CMSEvent | null>(null);
   const [editingStory, setEditingStory] = useState<CMSStory | null>(null);
   const [viewingMedia, setViewingMedia] = useState<MediaAsset | null>(null);
   const [viewingMediaIndex, setViewingMediaIndex] = useState<number>(0);
@@ -983,17 +986,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                     </div>
 
                     <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between text-xs font-mono">
-                      <button
-                        onClick={() => handleConvertEventToCaseStudy(evt)}
-                        className="px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-brand-red font-bold uppercase flex items-center space-x-1"
-                      >
-                        <Sparkles className="w-3 h-3 text-brand-red" />
-                        <span>CONVERT TO CASE STUDY</span>
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setPreviewEvent(evt)}
+                          className="px-3 py-1.5 bg-brand-red text-white rounded font-bold uppercase flex items-center space-x-1 shadow hover:bg-brand-black transition-colors"
+                          title="Preview Public Video & Photo Showcase"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                          <span>PREVIEW RECAP & VIDEO</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleConvertEventToCaseStudy(evt)}
+                          className="px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 font-bold uppercase flex items-center space-x-1"
+                        >
+                          <Sparkles className="w-3 h-3 text-brand-red" />
+                          <span>TO CASE STUDY</span>
+                        </button>
+                      </div>
 
                       <button
                         onClick={() => setEditingEvent(evt)}
                         className="p-1.5 bg-white border border-neutral-300 rounded hover:bg-brand-black hover:text-white"
+                        title="Edit Event"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
@@ -2284,17 +2299,84 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-mono font-bold block mb-1">SCALE / ATTENDEES</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 1,500+ Attendees from 25 Nations"
+                      value={editingEvent.attendees || ''}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, attendees: e.target.value })}
+                      className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono font-bold block mb-1">STATUS</label>
+                    <select
+                      value={editingEvent.status}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value as any })}
+                      className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono font-bold"
+                    >
+                      <option value="UPCOMING">UPCOMING</option>
+                      <option value="ONGOING">ONGOING</option>
+                      <option value="COMPLETED">COMPLETED (Show Recap & Archive)</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="font-mono font-bold block mb-1">STATUS</label>
-                  <select
-                    value={editingEvent.status}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value as any })}
-                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono font-bold"
-                  >
-                    <option value="UPCOMING">UPCOMING</option>
-                    <option value="ONGOING">ONGOING</option>
-                    <option value="COMPLETED">COMPLETED</option>
-                  </select>
+                  <label className="font-mono font-bold block mb-1 text-brand-red">
+                    HIGHLIGHT VIDEO URL (YOUTUBE / VIMEO / FACEBOOK VIDEO)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/watch?v=... or MP4 URL"
+                    value={editingEvent.highlightVideoUrl || ''}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, highlightVideoUrl: e.target.value })}
+                    className="w-full p-2.5 bg-neutral-50 border border-brand-red/40 rounded font-mono text-[11px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">
+                    PHOTO SHOWCASE GALLERY (IMAGE URLS PER LINE)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Paste image URLs separated by line or commas"
+                    value={editingEvent.galleryImages ? editingEvent.galleryImages.join('\n') : ''}
+                    onChange={(e) =>
+                      setEditingEvent({
+                        ...editingEvent,
+                        galleryImages: e.target.value
+                          .split('\n')
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                      })
+                    }
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono text-[11px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">RECAP SUMMARY & IMPACT NARRATIVE</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Executive recap of the event outcomes, physical staging, and audience resonance..."
+                    value={editingEvent.recapSummary || ''}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, recapSummary: e.target.value })}
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">REGISTRATION / WHATSAPP TICKET URL</label>
+                  <input
+                    type="text"
+                    value={editingEvent.registrationUrl || ''}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, registrationUrl: e.target.value })}
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono"
+                  />
                 </div>
               </div>
 
@@ -2314,6 +2396,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* EVENT PUBLIC RECAP MODAL PREVIEW */}
+      <AnimatePresence>
+        {previewEvent && (
+          <EventRecapModal
+            event={previewEvent}
+            onClose={() => setPreviewEvent(null)}
+          />
         )}
       </AnimatePresence>
 
