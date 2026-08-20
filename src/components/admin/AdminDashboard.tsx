@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -23,6 +23,18 @@ import {
   Share2,
   Sparkles,
   UploadCloud,
+  ChevronLeft,
+  ChevronRight,
+  Columns,
+  List,
+  PanelLeftClose,
+  PanelLeft,
+  Printer,
+  FileDown,
+  Upload,
+  Link2,
+  FileText,
+  Clapperboard,
 } from 'lucide-react';
 import {
   getStoredCMSProjects,
@@ -36,6 +48,8 @@ import {
   getStoredUsers,
   getStoredSettings,
   saveSettings,
+  exportFullDatabaseJSON,
+  importFullDatabaseJSON,
 } from '../../data/cmsConfig';
 import { AIService, type AILeadAnalysis, type AISocialRepurposing } from '../../services/aiService';
 import type {
@@ -68,6 +82,7 @@ type AdminTab =
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Stores State
   const [projects, setProjects] = useState<CMSProject[]>([]);
@@ -83,6 +98,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [leadStatusFilter, setLeadStatusFilter] = useState('ALL');
   const [projectStatusFilter, setProjectStatusFilter] = useState('ALL');
   const [mediaCategoryFilter, setMediaCategoryFilter] = useState('ALL');
+  const [leadsViewMode, setLeadsViewMode] = useState<'list' | 'kanban'>('list');
 
   // Active Modals & Editors
   const [selectedLead, setSelectedLead] = useState<LeadSubmission | null>(null);
@@ -91,6 +107,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [projectStep, setProjectStep] = useState(1);
   const [editingEvent, setEditingEvent] = useState<CMSEvent | null>(null);
   const [viewingMedia, setViewingMedia] = useState<MediaAsset | null>(null);
+  const [viewingMediaIndex, setViewingMediaIndex] = useState<number>(0);
+  const [proposalLead, setProposalLead] = useState<LeadSubmission | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
   // AI Operations Modals
@@ -98,6 +116,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [rawProjectMaterial, setRawProjectMaterial] = useState('');
   const [aiLeadAnalysis, setAiLeadAnalysis] = useState<AILeadAnalysis | null>(null);
   const [aiSocialProject, setAiSocialProject] = useState<{ project: CMSProject; result: AISocialRepurposing } | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -123,6 +143,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       document.body.classList.remove('admin-open');
     };
   }, [isOpen]);
+
+  // Keyboard navigation for Media Lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!viewingMedia) return;
+      if (e.key === 'ArrowRight') {
+        const nextIndex = (viewingMediaIndex + 1) % media.length;
+        setViewingMediaIndex(nextIndex);
+        setViewingMedia(media[nextIndex]);
+      } else if (e.key === 'ArrowLeft') {
+        const prevIndex = (viewingMediaIndex - 1 + media.length) % media.length;
+        setViewingMediaIndex(prevIndex);
+        setViewingMedia(media[prevIndex]);
+      } else if (e.key === 'Escape') {
+        setViewingMedia(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewingMedia, viewingMediaIndex, media]);
 
   const notify = (msg: string) => {
     setNotification(msg);
@@ -169,7 +209,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     setProjectStep(1);
   };
 
-  // AI Create Project from Material
   const handleGenerateProjectFromAI = () => {
     if (!rawProjectMaterial.trim()) {
       notify('Please enter brief or project text.');
@@ -283,7 +322,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     notify('Event updated.');
   };
 
-  // Convert Completed Event into Case Study
   const handleConvertEventToCaseStudy = (evt: CMSEvent) => {
     const newProj: CMSProject = {
       id: `case-${evt.id.toLowerCase()}`,
@@ -383,23 +421,75 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     notify('Leads exported to CSV.');
   };
 
+  // --- Database Backup & Restore ---
+  const handleExportDatabase = () => {
+    const jsonString = exportFullDatabaseJSON();
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `CDesign_CMS_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    notify('Full CMS Database JSON exported successfully.');
+  };
+
+  const handleImportDatabase = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      const success = importFullDatabaseJSON(content);
+      if (success) {
+        setProjects(getStoredCMSProjects());
+        setEvents(getStoredCMSEvents());
+        setStories(getStoredCMSStories());
+        setMedia(getStoredMedia());
+        setLeads(getStoredLeads());
+        setSettings(getStoredSettings());
+        notify('Database restored successfully.');
+      } else {
+        alert('Failed to import database file. Please verify file format.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="admin-dashboard-container fixed inset-0 z-50 bg-neutral-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden select-none">
       <div className="w-full max-w-7xl h-[95vh] bg-white rounded-xl shadow-2xl flex overflow-hidden border border-neutral-200">
         {/* Left Sidebar Navigation */}
-        <aside className="w-64 bg-neutral-900 text-white flex flex-col justify-between p-4 flex-shrink-0 border-r border-neutral-800">
+        <aside
+          className={`${
+            isSidebarCollapsed ? 'w-18' : 'w-64'
+          } bg-neutral-900 text-white flex flex-col justify-between p-3 sm:p-4 flex-shrink-0 border-r border-neutral-800 transition-all duration-300`}
+        >
           <div className="space-y-6">
-            {/* Brand Logo & Version */}
-            <div className="flex items-center space-x-3 px-2 py-1">
-              <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-full shadow" />
-              <div>
-                <span className="font-display font-black text-sm uppercase tracking-tight block">
-                  CDesign Production
-                </span>
-                <span className="font-mono text-[9px] text-brand-red font-bold uppercase tracking-wider block">
-                  CMS CORE V7.0 · AI ENABLED
-                </span>
+            {/* Brand Logo & Toggle */}
+            <div className="flex items-center justify-between px-1 py-1">
+              <div className="flex items-center space-x-3 overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-full shadow flex-shrink-0" />
+                {!isSidebarCollapsed && (
+                  <div className="truncate">
+                    <span className="font-display font-black text-sm uppercase tracking-tight block truncate">
+                      CDesign
+                    </span>
+                    <span className="font-mono text-[9px] text-brand-red font-bold uppercase tracking-wider block">
+                      CMS V7.5 · PRO
+                    </span>
+                  </div>
+                )}
               </div>
+
+              <button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800"
+                title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                {isSidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
             </div>
 
             {/* Navigation Menu */}
@@ -421,17 +511,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id as AdminTab)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md font-bold uppercase transition-all ${
+                    className={`w-full flex items-center ${
+                      isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-3'
+                    } py-2.5 rounded-md font-bold uppercase transition-all ${
                       isActive
                         ? 'bg-brand-red text-white shadow-md'
                         : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
                     }`}
+                    title={item.label}
                   >
                     <div className="flex items-center space-x-2.5">
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                     </div>
-                    {item.badge !== undefined && (
+                    {!isSidebarCollapsed && item.badge !== undefined && (
                       <span
                         className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                           item.badgeColor || (isActive ? 'bg-black/40 text-white' : 'bg-neutral-800 text-neutral-400')
@@ -451,17 +544,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
             <button
               onClick={() => setIsAiProjectModalOpen(true)}
               className="w-full py-2.5 bg-brand-red text-white rounded font-bold uppercase flex items-center justify-center space-x-1.5 shadow-md hover:bg-white hover:text-brand-black transition-colors"
+              title="AI Create Project"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI CREATE PROJECT</span>
+              <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
+              {!isSidebarCollapsed && <span>AI CREATE</span>}
             </button>
 
             <button
               onClick={onClose}
               className="w-full py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded flex items-center justify-center space-x-1 transition-colors"
+              title="Exit Admin"
             >
-              <X className="w-3.5 h-3.5" />
-              <span>EXIT ADMIN</span>
+              <X className="w-3.5 h-3.5 flex-shrink-0" />
+              {!isSidebarCollapsed && <span>EXIT ADMIN</span>}
             </button>
           </div>
         </aside>
@@ -852,7 +947,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
             </div>
           )}
 
-          {/* 4. MEDIA LIBRARY */}
+          {/* 4. MEDIA LIBRARY WITH LIGHTBOX & COPY URL */}
           {activeTab === 'media' && (
             <div className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-6">
               <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
@@ -895,10 +990,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {media
                   .filter((m) => mediaCategoryFilter === 'ALL' || m.type.toUpperCase() === mediaCategoryFilter)
-                  .map((asset) => (
+                  .map((asset, index) => (
                     <div
                       key={asset.id}
-                      onClick={() => setViewingMedia(asset)}
+                      onClick={() => {
+                        setViewingMedia(asset);
+                        setViewingMediaIndex(index);
+                      }}
                       className="bg-white rounded-lg border border-neutral-200 overflow-hidden shadow-sm group cursor-pointer hover:border-brand-red transition-all"
                     >
                       <div className="h-36 relative bg-neutral-900">
@@ -919,222 +1017,308 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
             </div>
           )}
 
-          {/* 5. LEADS CRM PIPELINE & AI SUMMARY */}
+          {/* 5. LEADS CRM (LIST & KANBAN VIEW) */}
           {activeTab === 'leads' && (
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-              {/* Left: Leads List */}
-              <div className="lg:w-1/2 flex flex-col border-r border-neutral-200 bg-white overflow-hidden">
-                <div className="p-4 border-b border-neutral-200 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        placeholder="Search leads by name, company, phone..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs bg-neutral-100 border border-neutral-200 rounded focus:bg-white focus:border-brand-red outline-none"
-                      />
-                    </div>
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Top Filter & View Mode Bar */}
+              <div className="p-4 bg-white border-b border-neutral-200 flex items-center justify-between gap-3">
+                <div className="flex items-center space-x-2 flex-1 max-w-md">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search leads by name, company, phone..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs bg-neutral-100 border border-neutral-200 rounded focus:bg-white focus:border-brand-red outline-none"
+                    />
+                  </div>
+                </div>
 
+                <div className="flex items-center space-x-2 text-xs font-mono">
+                  {/* View Mode Toggle: List vs Kanban */}
+                  <div className="flex items-center bg-neutral-100 p-0.5 rounded border border-neutral-200">
                     <button
-                      onClick={handleExportCSV}
-                      className="flex items-center space-x-1.5 px-3 py-2 bg-neutral-900 text-white rounded text-xs font-mono font-bold hover:bg-brand-red transition-colors flex-shrink-0"
+                      onClick={() => setLeadsViewMode('list')}
+                      className={`px-2.5 py-1 rounded flex items-center space-x-1 font-bold ${
+                        leadsViewMode === 'list' ? 'bg-white shadow text-brand-black' : 'text-neutral-500'
+                      }`}
                     >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>CSV</span>
+                      <List className="w-3.5 h-3.5" />
+                      <span>LIST</span>
+                    </button>
+                    <button
+                      onClick={() => setLeadsViewMode('kanban')}
+                      className={`px-2.5 py-1 rounded flex items-center space-x-1 font-bold ${
+                        leadsViewMode === 'kanban' ? 'bg-white shadow text-brand-black' : 'text-neutral-500'
+                      }`}
+                    >
+                      <Columns className="w-3.5 h-3.5" />
+                      <span>KANBAN</span>
                     </button>
                   </div>
 
-                  <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-[11px] font-mono scrollbar-none">
-                    {['ALL', 'NEW', 'QUALIFIED', 'PROPOSAL SENT', 'WON', 'LOST'].map((st) => (
-                      <button
-                        key={st}
-                        onClick={() => setLeadStatusFilter(st)}
-                        className={`px-2.5 py-1 rounded-full whitespace-nowrap font-bold uppercase ${
-                          leadStatusFilter === st ? 'bg-brand-black text-white' : 'bg-neutral-100 text-neutral-700'
-                        }`}
-                      >
-                        {st}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto divide-y divide-neutral-100">
-                  {leads
-                    .filter((l) => leadStatusFilter === 'ALL' || l.status === leadStatusFilter)
-                    .map((lead) => {
-                      const isSelected = selectedLead?.id === lead.id;
-                      return (
-                        <div
-                          key={lead.id}
-                          onClick={() => handleSelectLead(lead)}
-                          className={`p-4 cursor-pointer transition-all ${
-                            isSelected ? 'bg-neutral-50 border-l-4 border-brand-red' : 'hover:bg-neutral-50/50'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <span className="text-[10px] font-mono text-neutral-400 font-bold">{lead.id} · {lead.createdAt}</span>
-                              <h4 className="font-display text-sm font-bold text-brand-black">{lead.contactName}</h4>
-                              <span className="text-xs text-neutral-500">{lead.contactCompany || 'Private Entity'}</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
-                              lead.status === 'NEW' ? 'bg-brand-red text-white' : 'bg-neutral-200 text-neutral-800'
-                            }`}>
-                              {lead.status}
-                            </span>
-                          </div>
-
-                          <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-neutral-600">
-                            <span className="font-bold text-neutral-900">{lead.projectType}</span>
-                            <span className="font-bold text-brand-red">{lead.budgetRange}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <button
+                    onClick={handleExportCSV}
+                    className="flex items-center space-x-1.5 px-3 py-2 bg-neutral-900 text-white rounded font-bold hover:bg-brand-red transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>EXPORT CSV</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Right: Lead Dossier & AI Sales Assistant */}
-              <div className="lg:w-1/2 p-6 overflow-y-auto bg-white space-y-6">
-                {selectedLead ? (
-                  <>
-                    <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
-                      <div>
-                        <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase">LEAD DOSSIER</span>
-                        <h3 className="font-display text-2xl font-black uppercase text-brand-black">{selectedLead.contactName}</h3>
-                        <p className="text-xs text-neutral-600 font-medium">{selectedLead.contactCompany || 'Direct Client'}</p>
-                      </div>
-
-                      <select
-                        value={selectedLead.status}
-                        onChange={(e) => handleStatusChange(selectedLead.id, e.target.value as LeadStatus)}
-                        className="text-xs font-mono font-bold p-2 border border-neutral-300 rounded bg-white outline-none focus:border-brand-red"
-                      >
-                        <option value="NEW">NEW</option>
-                        <option value="CONTACTED">CONTACTED</option>
-                        <option value="QUALIFIED">QUALIFIED</option>
-                        <option value="PROPOSAL SENT">PROPOSAL SENT</option>
-                        <option value="WON">WON</option>
-                        <option value="LOST">LOST</option>
-                        <option value="ARCHIVED">ARCHIVED</option>
-                      </select>
-                    </div>
-
-                    {/* AI Executive Summary Card */}
-                    {aiLeadAnalysis && (
-                      <div className="p-4 bg-brand-light rounded-lg border border-neutral-200 space-y-3 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-brand-red font-bold uppercase flex items-center space-x-1.5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>AI LEAD SUMMARY & PRIORITY</span>
+              {/* KANBAN BOARD VIEW */}
+              {leadsViewMode === 'kanban' ? (
+                <div className="flex-1 p-4 overflow-x-auto bg-neutral-100 flex space-x-4">
+                  {(['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL SENT', 'WON'] as LeadStatus[]).map((columnStatus) => {
+                    const columnLeads = leads.filter((l) => l.status === columnStatus);
+                    return (
+                      <div key={columnStatus} className="w-72 bg-neutral-200/80 rounded-lg p-3 flex flex-col flex-shrink-0">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                          <span className="font-mono text-xs font-black uppercase text-brand-black tracking-wider">
+                            {columnStatus}
                           </span>
-                          <span className="px-2 py-0.5 bg-brand-red text-white text-[9px] font-mono font-bold rounded">
-                            {aiLeadAnalysis.suggestedPriority} PRIORITY
+                          <span className="px-2 py-0.5 bg-white text-brand-black text-[10px] font-mono font-bold rounded-full shadow-sm">
+                            {columnLeads.length}
                           </span>
                         </div>
 
-                        <p className="text-neutral-800 font-medium">{aiLeadAnalysis.projectSummary}</p>
+                        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                          {columnLeads.map((lead) => (
+                            <div
+                              key={lead.id}
+                              onClick={() => {
+                                handleSelectLead(lead);
+                                setLeadsViewMode('list');
+                              }}
+                              className="bg-white p-3.5 rounded-lg border border-neutral-200 shadow-sm hover:border-brand-red cursor-pointer transition-all space-y-2"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <strong className="font-display text-sm font-bold text-brand-black block">{lead.contactName}</strong>
+                                  <span className="text-[11px] text-neutral-500">{lead.contactCompany || 'Private Entity'}</span>
+                                </div>
+                                <span className="text-[9px] font-mono text-brand-red font-bold">{lead.budgetRange}</span>
+                              </div>
 
-                        {/* Missing info flags */}
-                        {aiLeadAnalysis.missingInformation.length > 0 && (
-                          <div className="p-2 bg-white rounded border border-neutral-200 text-[11px] text-amber-800">
-                            <strong>MISSING INFO TO CLARIFY:</strong> {aiLeadAnalysis.missingInformation.join(' · ')}
+                              <p className="text-[11px] text-neutral-700 font-medium line-clamp-2">{lead.details}</p>
+
+                              <div className="flex items-center justify-between pt-1 border-t border-neutral-100 text-[10px] font-mono text-neutral-400">
+                                <span>{lead.location}</span>
+                                <span>{lead.timeline}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* LIST + DOSSIER VIEW */
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                  {/* Left: Leads List */}
+                  <div className="lg:w-1/2 flex flex-col border-r border-neutral-200 bg-white overflow-hidden">
+                    <div className="p-3 border-b border-neutral-200 flex items-center space-x-1.5 overflow-x-auto text-[11px] font-mono scrollbar-none">
+                      {['ALL', 'NEW', 'QUALIFIED', 'PROPOSAL SENT', 'WON', 'LOST'].map((st) => (
+                        <button
+                          key={st}
+                          onClick={() => setLeadStatusFilter(st)}
+                          className={`px-2.5 py-1 rounded-full whitespace-nowrap font-bold uppercase ${
+                            leadStatusFilter === st ? 'bg-brand-black text-white' : 'bg-neutral-100 text-neutral-700'
+                          }`}
+                        >
+                          {st}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto divide-y divide-neutral-100">
+                      {leads
+                        .filter((l) => leadStatusFilter === 'ALL' || l.status === leadStatusFilter)
+                        .map((lead) => {
+                          const isSelected = selectedLead?.id === lead.id;
+                          return (
+                            <div
+                              key={lead.id}
+                              onClick={() => handleSelectLead(lead)}
+                              className={`p-4 cursor-pointer transition-all ${
+                                isSelected ? 'bg-neutral-50 border-l-4 border-brand-red' : 'hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <span className="text-[10px] font-mono text-neutral-400 font-bold">{lead.id} · {lead.createdAt}</span>
+                                  <h4 className="font-display text-sm font-bold text-brand-black">{lead.contactName}</h4>
+                                  <span className="text-xs text-neutral-500">{lead.contactCompany || 'Private Entity'}</span>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
+                                  lead.status === 'NEW' ? 'bg-brand-red text-white' : 'bg-neutral-200 text-neutral-800'
+                                }`}>
+                                  {lead.status}
+                                </span>
+                              </div>
+
+                              <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-neutral-600">
+                                <span className="font-bold text-neutral-900">{lead.projectType}</span>
+                                <span className="font-bold text-brand-red">{lead.budgetRange}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Right: Lead Dossier & Action Deck */}
+                  <div className="lg:w-1/2 p-6 overflow-y-auto bg-white space-y-6">
+                    {selectedLead ? (
+                      <>
+                        <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+                          <div>
+                            <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase">LEAD DOSSIER</span>
+                            <h3 className="font-display text-2xl font-black uppercase text-brand-black">{selectedLead.contactName}</h3>
+                            <p className="text-xs text-neutral-600 font-medium">{selectedLead.contactCompany || 'Direct Client'}</p>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => setProposalLead(selectedLead)}
+                              className="px-3 py-1.5 bg-neutral-900 text-white rounded text-xs font-mono font-bold uppercase flex items-center space-x-1 hover:bg-brand-red"
+                              title="Export Printable Proposal / Quote"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>PROPOSAL BRIEF</span>
+                            </button>
+
+                            <select
+                              value={selectedLead.status}
+                              onChange={(e) => handleStatusChange(selectedLead.id, e.target.value as LeadStatus)}
+                              className="text-xs font-mono font-bold p-2 border border-neutral-300 rounded bg-white outline-none focus:border-brand-red"
+                            >
+                              <option value="NEW">NEW</option>
+                              <option value="CONTACTED">CONTACTED</option>
+                              <option value="QUALIFIED">QUALIFIED</option>
+                              <option value="PROPOSAL SENT">PROPOSAL SENT</option>
+                              <option value="WON">WON</option>
+                              <option value="LOST">LOST</option>
+                              <option value="ARCHIVED">ARCHIVED</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* AI Executive Summary Card */}
+                        {aiLeadAnalysis && (
+                          <div className="p-4 bg-brand-light rounded-lg border border-neutral-200 space-y-3 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-brand-red font-bold uppercase flex items-center space-x-1.5">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span>AI LEAD SUMMARY & PRIORITY</span>
+                              </span>
+                              <span className="px-2 py-0.5 bg-brand-red text-white text-[9px] font-mono font-bold rounded">
+                                {aiLeadAnalysis.suggestedPriority} PRIORITY
+                              </span>
+                            </div>
+
+                            <p className="text-neutral-800 font-medium">{aiLeadAnalysis.projectSummary}</p>
+
+                            {aiLeadAnalysis.missingInformation.length > 0 && (
+                              <div className="p-2 bg-white rounded border border-neutral-200 text-[11px] text-amber-800">
+                                <strong>MISSING INFO TO CLARIFY:</strong> {aiLeadAnalysis.missingInformation.join(' · ')}
+                              </div>
+                            )}
+
+                            <div className="pt-2 flex items-center space-x-2">
+                              <a
+                                href={`https://wa.me/${selectedLead.contactPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(aiLeadAnalysis.draftWhatsApp)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 py-2 bg-[#25D366] text-white text-[11px] font-bold uppercase rounded flex items-center justify-center space-x-1.5 shadow"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                                <span>SEND AI WHATSAPP DRAFT</span>
+                              </a>
+                            </div>
                           </div>
                         )}
 
-                        {/* 1-Click WhatsApp Quick Action */}
-                        <div className="pt-2 flex items-center space-x-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <a
-                            href={`https://wa.me/${selectedLead.contactPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(aiLeadAnalysis.draftWhatsApp)}`}
+                            href={`https://wa.me/${selectedLead.contactPhone.replace(/[^0-9]/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-2 bg-[#25D366] text-white text-[11px] font-bold uppercase rounded flex items-center justify-center space-x-1.5 shadow"
+                            className="p-3 bg-[#25D366] text-white rounded text-xs font-bold uppercase flex items-center justify-center space-x-1.5 shadow-sm"
                           >
-                            <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                            <span>SEND AI WHATSAPP DRAFT</span>
+                            <MessageCircle className="w-4 h-4 fill-current" />
+                            <span>WHATSAPP</span>
+                          </a>
+                          <a
+                            href={`tel:${selectedLead.contactPhone}`}
+                            className="p-3 bg-neutral-900 text-white rounded text-xs font-bold uppercase flex items-center justify-center space-x-1.5 shadow-sm"
+                          >
+                            <Phone className="w-4 h-4" />
+                            <span>CALL</span>
+                          </a>
+                          <a
+                            href={`mailto:${selectedLead.contactEmail}`}
+                            className="p-3 bg-neutral-100 text-neutral-900 border border-neutral-300 rounded text-xs font-bold uppercase flex items-center justify-center space-x-1.5"
+                          >
+                            <Mail className="w-4 h-4" />
+                            <span>EMAIL</span>
                           </a>
                         </div>
-                      </div>
-                    )}
 
-                    <div className="grid grid-cols-3 gap-2">
-                      <a
-                        href={`https://wa.me/${selectedLead.contactPhone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-3 bg-[#25D366] text-white rounded text-xs font-bold uppercase flex items-center justify-center space-x-1.5 shadow-sm"
-                      >
-                        <MessageCircle className="w-4 h-4 fill-current" />
-                        <span>WHATSAPP</span>
-                      </a>
-                      <a
-                        href={`tel:${selectedLead.contactPhone}`}
-                        className="p-3 bg-neutral-900 text-white rounded text-xs font-bold uppercase flex items-center justify-center space-x-1.5 shadow-sm"
-                      >
-                        <Phone className="w-4 h-4" />
-                        <span>CALL</span>
-                      </a>
-                      <a
-                        href={`mailto:${selectedLead.contactEmail}`}
-                        className="p-3 bg-neutral-100 text-neutral-900 border border-neutral-300 rounded text-xs font-bold uppercase flex items-center justify-center space-x-1.5"
-                      >
-                        <Mail className="w-4 h-4" />
-                        <span>EMAIL</span>
-                      </a>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-xs bg-neutral-50 p-4 rounded border border-neutral-200">
-                      <div>
-                        <span className="font-mono text-neutral-400 text-[10px] block">DISCIPLINE</span>
-                        <strong>{selectedLead.projectType}</strong>
-                      </div>
-                      <div>
-                        <span className="font-mono text-neutral-400 text-[10px] block">LOCATION</span>
-                        <strong>{selectedLead.location}</strong>
-                      </div>
-                      <div>
-                        <span className="font-mono text-neutral-400 text-[10px] block">TIMELINE</span>
-                        <strong>{selectedLead.timeline}</strong>
-                      </div>
-                      <div>
-                        <span className="font-mono text-neutral-400 text-[10px] block">BUDGET RANGE</span>
-                        <strong className="text-brand-red">{selectedLead.budgetRange}</strong>
-                      </div>
-                    </div>
-
-                    {selectedLead.details && (
-                      <div className="space-y-1 text-xs">
-                        <span className="font-mono text-neutral-400 text-[10px] uppercase font-bold">CLIENT BRIEF</span>
-                        <div className="p-3 bg-neutral-50 rounded border border-neutral-200 text-neutral-800 italic">
-                          "{selectedLead.details}"
+                        <div className="grid grid-cols-2 gap-3 text-xs bg-neutral-50 p-4 rounded border border-neutral-200">
+                          <div>
+                            <span className="font-mono text-neutral-400 text-[10px] block">DISCIPLINE</span>
+                            <strong>{selectedLead.projectType}</strong>
+                          </div>
+                          <div>
+                            <span className="font-mono text-neutral-400 text-[10px] block">LOCATION</span>
+                            <strong>{selectedLead.location}</strong>
+                          </div>
+                          <div>
+                            <span className="font-mono text-neutral-400 text-[10px] block">TIMELINE</span>
+                            <strong>{selectedLead.timeline}</strong>
+                          </div>
+                          <div>
+                            <span className="font-mono text-neutral-400 text-[10px] block">BUDGET RANGE</span>
+                            <strong className="text-brand-red">{selectedLead.budgetRange}</strong>
+                          </div>
                         </div>
-                      </div>
-                    )}
 
-                    <div className="space-y-2 text-xs pt-2">
-                      <span className="font-mono text-neutral-400 text-[10px] uppercase font-bold">INTERNAL EXECUTIVE NOTES</span>
-                      <textarea
-                        rows={3}
-                        value={leadNotes}
-                        onChange={(e) => setLeadNotes(e.target.value)}
-                        placeholder="Add production notes, call outcomes, quotation status..."
-                        className="w-full p-3 bg-neutral-50 border border-neutral-300 rounded focus:bg-white focus:border-brand-red outline-none"
-                      />
-                      <button
-                        onClick={handleSaveLeadNotes}
-                        className="px-4 py-2 bg-brand-black text-white text-xs font-bold uppercase rounded hover:bg-brand-red transition-colors"
-                      >
-                        SAVE NOTES
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-20 text-neutral-400 text-xs">Select a lead to review.</div>
-                )}
-              </div>
+                        {selectedLead.details && (
+                          <div className="space-y-1 text-xs">
+                            <span className="font-mono text-neutral-400 text-[10px] uppercase font-bold">CLIENT BRIEF</span>
+                            <div className="p-3 bg-neutral-50 rounded border border-neutral-200 text-neutral-800 italic">
+                              "{selectedLead.details}"
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="space-y-2 text-xs pt-2">
+                          <span className="font-mono text-neutral-400 text-[10px] uppercase font-bold">INTERNAL EXECUTIVE NOTES</span>
+                          <textarea
+                            rows={3}
+                            value={leadNotes}
+                            onChange={(e) => setLeadNotes(e.target.value)}
+                            placeholder="Add production notes, call outcomes, quotation status..."
+                            className="w-full p-3 bg-neutral-50 border border-neutral-300 rounded focus:bg-white focus:border-brand-red outline-none"
+                          />
+                          <button
+                            onClick={handleSaveLeadNotes}
+                            className="px-4 py-2 bg-brand-black text-white text-xs font-bold uppercase rounded hover:bg-brand-red transition-colors"
+                          >
+                            SAVE NOTES
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-20 text-neutral-400 text-xs">Select a lead to review.</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1179,16 +1363,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
             </div>
           )}
 
-          {/* 7. GLOBAL SETTINGS */}
+          {/* 7. GLOBAL SETTINGS & DATABASE BACKUP */}
           {activeTab === 'settings' && (
-            <div className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-6">
+            <div className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-8">
               <div className="border-b border-neutral-200 pb-4">
-                <span className="text-xs font-mono font-bold text-brand-red uppercase">COMPANY CONFIG</span>
+                <span className="text-xs font-mono font-bold text-brand-red uppercase">COMPANY CONFIG & BACKUPS</span>
                 <h2 className="font-display text-3xl font-black uppercase text-brand-black">
-                  CENTRAL CONTACT & COMPANY DETAILS
+                  GLOBAL SETTINGS & DATA ARCHIVES
                 </h2>
               </div>
 
+              {/* Database Backup & Restore Card */}
+              <div className="p-6 bg-white rounded-lg border border-neutral-200 shadow-sm space-y-4 max-w-3xl">
+                <div className="flex items-center space-x-2">
+                  <FileDown className="w-4 h-4 text-brand-red" />
+                  <h3 className="font-display text-base font-bold uppercase text-brand-black">
+                    FULL DATABASE BACKUP & RESTORE
+                  </h3>
+                </div>
+                <p className="text-xs text-neutral-600 leading-relaxed">
+                  Export all projects, events, media metadata, stories, and CRM leads as a single JSON file. You can restore this archive anytime on a new device.
+                </p>
+
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    onClick={handleExportDatabase}
+                    className="px-4 py-2.5 bg-brand-black hover:bg-brand-red text-white text-xs font-mono font-bold uppercase rounded flex items-center space-x-2 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>EXPORT DATABASE (JSON)</span>
+                  </button>
+
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-brand-black text-xs font-mono font-bold uppercase rounded border border-neutral-300 flex items-center space-x-2 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>RESTORE DATABASE</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportDatabase}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Central Contact Config */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -1305,6 +1528,188 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
           )}
         </main>
       </div>
+
+      {/* LIGHTBOX HIGH-RES MEDIA MODAL */}
+      <AnimatePresence>
+        {viewingMedia && (
+          <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-4xl max-h-[92vh] bg-neutral-900 rounded-xl shadow-2xl p-6 flex flex-col justify-between space-y-4 text-xs text-white relative overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3 flex-shrink-0">
+                <div>
+                  <h4 className="font-display text-base font-bold uppercase text-white">{viewingMedia.title}</h4>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    ASSET {viewingMediaIndex + 1} / {media.length} · USE ← → ARROW KEYS
+                  </span>
+                </div>
+                <button onClick={() => setViewingMedia(null)} className="p-1.5 text-neutral-400 hover:text-white rounded">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Main Lightbox Frame */}
+              <div className="flex-1 relative flex items-center justify-center min-h-[360px] bg-black/60 rounded-lg overflow-hidden">
+                <img
+                  src={viewingMedia.url}
+                  alt={viewingMedia.title}
+                  className="max-h-[60vh] max-w-full object-contain"
+                />
+
+                {/* Left/Right Lightbox Arrows */}
+                <button
+                  onClick={() => {
+                    const prevIndex = (viewingMediaIndex - 1 + media.length) % media.length;
+                    setViewingMediaIndex(prevIndex);
+                    setViewingMedia(media[prevIndex]);
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/70 hover:bg-brand-red text-white rounded-full transition-colors"
+                  title="Previous Photo"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    const nextIndex = (viewingMediaIndex + 1) % media.length;
+                    setViewingMediaIndex(nextIndex);
+                    setViewingMedia(media[nextIndex]);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/70 hover:bg-brand-red text-white rounded-full transition-colors"
+                  title="Next Photo"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Metadata & Actions */}
+              <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-[11px] font-mono text-neutral-400 flex-shrink-0">
+                <div className="space-x-4">
+                  <span><strong>SIZE:</strong> {viewingMedia.dimensions || viewingMedia.fileSize}</span>
+                  <span><strong>USED IN:</strong> {viewingMedia.usedIn.join(', ')}</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(viewingMedia.url);
+                      notify('Image URL copied to clipboard.');
+                    }}
+                    className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded font-bold uppercase flex items-center space-x-1.5 transition-colors"
+                  >
+                    <Link2 className="w-3.5 h-3.5 text-brand-red" />
+                    <span>COPY URL</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (viewingMedia.usedIn.length > 0) {
+                        alert(`Cannot delete: Asset is currently live in ${viewingMedia.usedIn.join(', ')}.`);
+                      } else {
+                        setMedia(media.filter((m) => m.id !== viewingMedia.id));
+                        setViewingMedia(null);
+                        notify('Asset removed.');
+                      }
+                    }}
+                    className="px-4 py-2 bg-neutral-800 hover:bg-brand-red text-neutral-300 hover:text-white rounded font-bold uppercase transition-colors"
+                  >
+                    DELETE
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PRINTABLE PROPOSAL BRIEF & QUOTE MODAL */}
+      <AnimatePresence>
+        {proposalLead && (
+          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-3xl max-h-[92vh] bg-white rounded-xl shadow-2xl p-8 flex flex-col justify-between overflow-y-auto space-y-6 text-brand-black"
+            >
+              {/* Header with Official Logo */}
+              <div className="flex items-start justify-between border-b border-neutral-300 pb-4">
+                <div className="flex items-center space-x-3">
+                  <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-full" />
+                  <div>
+                    <h3 className="font-display text-xl font-black uppercase tracking-tight">C DESIGN PRODUCTION</h3>
+                    <span className="font-mono text-[10px] text-neutral-500 block">
+                      CREATIVE DIRECTION · EVENT PRODUCTION · CINEMATOGRAPHY · TAWAU, SABAH
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right font-mono text-[10px] text-neutral-500">
+                  <span>DATE: {new Date().toISOString().slice(0, 10)}</span>
+                  <span className="block font-bold text-brand-red">REF: {proposalLead.id}</span>
+                </div>
+              </div>
+
+              {/* Proposal Body */}
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-neutral-50 rounded border border-neutral-200 grid grid-cols-2 gap-3 font-mono">
+                  <div><strong>CLIENT:</strong> {proposalLead.contactName}</div>
+                  <div><strong>ORGANIZATION:</strong> {proposalLead.contactCompany || 'Direct Client'}</div>
+                  <div><strong>DISCIPLINE:</strong> {proposalLead.projectType}</div>
+                  <div><strong>LOCATION:</strong> {proposalLead.location}</div>
+                  <div><strong>TIMELINE:</strong> {proposalLead.timeline}</div>
+                  <div><strong>ESTIMATED BUDGET:</strong> <span className="text-brand-red font-bold">{proposalLead.budgetRange}</span></div>
+                </div>
+
+                <div className="space-y-1">
+                  <strong className="font-mono uppercase text-neutral-500 text-[11px] block">PROJECT SCOPE & OBJECTIVES</strong>
+                  <p className="p-3 bg-neutral-50 rounded border border-neutral-200 text-neutral-800 leading-relaxed italic">
+                    "{proposalLead.details}"
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <strong className="font-mono uppercase text-neutral-500 text-[11px] block">STANDARD PRODUCTION DELIVERABLES</strong>
+                  <ul className="list-disc pl-5 space-y-1 text-neutral-700 font-medium">
+                    <li>360-Degree Creative Direction & Master Schedule Management</li>
+                    <li>Arena Scenography, Kinetic Lighting Rigging & Sound Calibration</li>
+                    <li>4K Multi-Cam Broadcast & Cinematography Archive</li>
+                    <li>Post-Production Documentary Master & Highlight Reels</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="pt-4 border-t border-neutral-300 flex items-center justify-between">
+                <span className="font-mono text-[10px] text-neutral-400">
+                  Official Creative Proposal Deck · C Design Production Sdn. Bhd.
+                </span>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-brand-black text-white text-xs font-mono font-bold uppercase rounded hover:bg-brand-red flex items-center space-x-1.5"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>PRINT / SAVE PDF</span>
+                  </button>
+
+                  <button
+                    onClick={() => setProposalLead(null)}
+                    className="px-4 py-2 bg-neutral-100 text-neutral-700 text-xs font-mono font-bold uppercase rounded"
+                  >
+                    CLOSE
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* AI CREATE PROJECT MODAL */}
       <AnimatePresence>
@@ -1435,7 +1840,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
         )}
       </AnimatePresence>
 
-      {/* PROJECT GUIDED BUILDER MODAL */}
+      {/* PROJECT GUIDED BUILDER WITH CREW & GEAR SPECS */}
       <AnimatePresence>
         {editingProject && (
           <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-3 sm:p-6">
@@ -1534,7 +1939,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
                 {projectStep === 2 && (
                   <div className="space-y-4 max-w-2xl text-xs">
-                    <span className="font-mono text-brand-red font-bold uppercase block">02 / HERO MEDIA & STORY</span>
+                    <span className="font-mono text-brand-red font-bold uppercase block">02 / HERO MEDIA & CREW ROSTER</span>
                     <div>
                       <label className="font-mono font-bold block mb-1">HERO IMAGE URL *</label>
                       <input
@@ -1555,6 +1960,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                         onChange={(e) => setEditingProject({ ...editingProject, summary: e.target.value })}
                         className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded"
                       />
+                    </div>
+
+                    {/* Crew & Technical Gear Specs */}
+                    <div className="p-4 bg-neutral-100 rounded-lg space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Clapperboard className="w-4 h-4 text-brand-red" />
+                        <span className="font-mono font-bold uppercase text-brand-black">PRODUCTION CREW & SPECS</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 font-mono text-[11px]">
+                        <div>
+                          <label className="block text-neutral-500 mb-0.5">CREATIVE DIRECTOR</label>
+                          <input
+                            type="text"
+                            defaultValue={editingProject.credits?.creativeDirection || 'C Design Production'}
+                            className="w-full p-1.5 bg-white border border-neutral-300 rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-neutral-500 mb-0.5">PRODUCER</label>
+                          <input
+                            type="text"
+                            defaultValue={editingProject.credits?.producer || 'Ron Fatt'}
+                            className="w-full p-1.5 bg-white border border-neutral-300 rounded"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1623,53 +2054,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                   </button>
                 )}
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* MEDIA DETAILS MODAL */}
-      <AnimatePresence>
-        {viewingMedia && (
-          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="w-full max-w-lg bg-white rounded-lg shadow-2xl p-6 space-y-4 text-xs"
-            >
-              <div className="flex items-center justify-between border-b pb-3">
-                <h4 className="font-display text-base font-bold uppercase text-brand-black">{viewingMedia.title}</h4>
-                <button onClick={() => setViewingMedia(null)} className="p-1 text-neutral-400 hover:text-black">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="h-56 rounded overflow-hidden bg-neutral-900">
-                <img src={viewingMedia.url} alt={viewingMedia.title} className="w-full h-full object-contain" />
-              </div>
-
-              <div className="space-y-1 font-mono text-[11px] text-neutral-600 bg-neutral-50 p-3 rounded">
-                <div><strong>DIMENSIONS:</strong> {viewingMedia.dimensions}</div>
-                <div><strong>FILE SIZE:</strong> {viewingMedia.fileSize}</div>
-                <div><strong>ALT TEXT:</strong> {viewingMedia.altText}</div>
-                <div><strong>USED IN:</strong> {viewingMedia.usedIn.join(', ')}</div>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (viewingMedia.usedIn.length > 0) {
-                    alert(`Cannot delete: Asset is currently live in ${viewingMedia.usedIn.join(', ')}.`);
-                  } else {
-                    setMedia(media.filter((m) => m.id !== viewingMedia.id));
-                    setViewingMedia(null);
-                    notify('Asset removed.');
-                  }
-                }}
-                className="w-full py-2.5 bg-neutral-100 hover:bg-red-50 hover:text-brand-red text-neutral-600 rounded font-mono font-bold uppercase transition-colors"
-              >
-                SAFE DELETE ASSET
-              </button>
             </motion.div>
           </div>
         )}

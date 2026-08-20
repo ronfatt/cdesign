@@ -509,3 +509,58 @@ export function saveSettings(settings: CompanySettings) {
     console.error('Failed to save settings', e);
   }
 }
+
+// Full Database JSON Backup & Restore
+export interface CMSDatabaseBackup {
+  version: string;
+  timestamp: string;
+  companySettings: CompanySettings;
+  projects: CMSProject[];
+  events: CMSEvent[];
+  stories: CMSStory[];
+  media: MediaAsset[];
+  leads: LeadSubmission[];
+  partners: CMSPartner[];
+  testimonials: CMSTestimonial[];
+  users: CMSUser[];
+}
+
+export function exportFullDatabaseJSON(): string {
+  const data: CMSDatabaseBackup = {
+    version: '7.0',
+    timestamp: new Date().toISOString(),
+    companySettings: getStoredSettings(),
+    projects: getStoredCMSProjects(),
+    events: getStoredCMSEvents(),
+    stories: getStoredCMSStories(),
+    media: getStoredMedia(),
+    leads: getStoredLeads(),
+    partners: getStoredPartners(),
+    testimonials: getStoredTestimonials(),
+    users: getStoredUsers()
+  };
+  return JSON.stringify(data, null, 2);
+}
+
+export function importFullDatabaseJSON(jsonStr: string): boolean {
+  try {
+    const data: CMSDatabaseBackup = JSON.parse(jsonStr);
+    if (!data.projects || !data.companySettings) {
+      throw new Error('Invalid C Design CMS backup file format.');
+    }
+    if (data.projects) saveCMSProjects(data.projects);
+    if (data.events) saveCMSEvents(data.events);
+    if (data.stories) saveCMSStories(data.stories);
+    if (data.media) saveMedia(data.media);
+    if (data.leads) localStorage.setItem(LEADS_KEY, JSON.stringify(data.leads));
+    if (data.partners) savePartners(data.partners);
+    if (data.testimonials) saveTestimonials(data.testimonials);
+    if (data.users) saveUsers(data.users);
+    if (data.companySettings) saveSettings(data.companySettings);
+    return true;
+  } catch (e) {
+    console.error('Failed to import database JSON', e);
+    return false;
+  }
+}
+
