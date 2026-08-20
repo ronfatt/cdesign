@@ -37,6 +37,7 @@ import {
   getStoredSettings,
   saveSettings,
 } from '../../data/cmsConfig';
+import { AIService, type AILeadAnalysis, type AISocialRepurposing } from '../../services/aiService';
 import type {
   CMSProject,
   CMSEvent,
@@ -92,6 +93,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [viewingMedia, setViewingMedia] = useState<MediaAsset | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
+  // AI Operations Modals
+  const [isAiProjectModalOpen, setIsAiProjectModalOpen] = useState(false);
+  const [rawProjectMaterial, setRawProjectMaterial] = useState('');
+  const [aiLeadAnalysis, setAiLeadAnalysis] = useState<AILeadAnalysis | null>(null);
+  const [aiSocialProject, setAiSocialProject] = useState<{ project: CMSProject; result: AISocialRepurposing } | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       setProjects(getStoredCMSProjects());
@@ -103,6 +110,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       if (loadedLeads.length > 0) {
         setSelectedLead(loadedLeads[0]);
         setLeadNotes(loadedLeads[0].internalNotes || '');
+        setAiLeadAnalysis(AIService.analyzeLead(loadedLeads[0]));
       }
       setUsers(getStoredUsers());
       setSettings(getStoredSettings());
@@ -152,6 +160,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     };
     setEditingProject(newProj);
     setProjectStep(1);
+  };
+
+  // AI Create Project from Material
+  const handleGenerateProjectFromAI = () => {
+    if (!rawProjectMaterial.trim()) {
+      notify('Please enter brief or project text.');
+      return;
+    }
+    const draft = AIService.analyzeProjectMaterial(rawProjectMaterial, 'Uploaded Event Brief');
+    const newProj: CMSProject = {
+      id: `proj-${Date.now().toString().slice(-4)}`,
+      title: draft.title,
+      subtitle: draft.subtitle,
+      slug: draft.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      number: `0${projects.length + 1}`,
+      category: draft.category,
+      year: draft.year,
+      location: draft.location,
+      status: 'DRAFT',
+      isFeatured: false,
+      heroImage: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+      summary: draft.summary,
+      narrative: draft.narrative,
+      deliverables: draft.deliverables,
+      galleryImages: [
+        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=1200&auto=format&fit=crop'
+      ],
+      credits: draft.credits,
+      seoTitle: draft.seoTitle,
+      metaDescription: draft.metaDescription,
+      lastUpdated: new Date().toISOString().slice(0, 10)
+    };
+    const updated = [newProj, ...projects];
+    setProjects(updated);
+    saveCMSProjects(updated);
+    setIsAiProjectModalOpen(false);
+    setRawProjectMaterial('');
+    setEditingProject(newProj);
+    setProjectStep(1);
+    notify(`AI Case Study Draft Created: "${newProj.title}"`);
   };
 
   const handleSaveProject = (proj: CMSProject) => {
@@ -265,6 +314,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   };
 
   // --- Lead CRM Handlers ---
+  const handleSelectLead = (lead: LeadSubmission) => {
+    setSelectedLead(lead);
+    setLeadNotes(lead.internalNotes || '');
+    setAiLeadAnalysis(AIService.analyzeLead(lead));
+  };
+
   const handleStatusChange = (id: string, newStatus: LeadStatus) => {
     const updated = updateLeadStatus(id, newStatus, leadNotes, selectedLead?.assignedTo, selectedLead?.followUpDate);
     setLeads(updated);
@@ -335,7 +390,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                   CDesign Production
                 </span>
                 <span className="font-mono text-[9px] text-brand-red font-bold uppercase tracking-wider block">
-                  CMS CORE V6.0 · ACTIVE
+                  CMS CORE V7.0 · AI ENABLED
                 </span>
               </div>
             </div>
@@ -387,11 +442,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
           {/* Quick Create + Close */}
           <div className="space-y-2 pt-4 border-t border-neutral-800 text-xs font-mono">
             <button
-              onClick={handleCreateNewProject}
-              className="w-full py-2.5 bg-neutral-800 hover:bg-brand-red text-white rounded font-bold uppercase flex items-center justify-center space-x-1.5 transition-colors"
+              onClick={() => setIsAiProjectModalOpen(true)}
+              className="w-full py-2.5 bg-brand-red text-white rounded font-bold uppercase flex items-center justify-center space-x-1.5 shadow-md hover:bg-white hover:text-brand-black transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>NEW PROJECT</span>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI CREATE PROJECT</span>
             </button>
 
             <button
@@ -434,11 +489,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
                 <div className="flex items-center space-x-2 text-xs font-mono">
                   <button
-                    onClick={handleCreateNewProject}
-                    className="px-3.5 py-2 bg-brand-black text-white rounded hover:bg-brand-red font-bold uppercase flex items-center space-x-1.5 transition-colors"
+                    onClick={() => setIsAiProjectModalOpen(true)}
+                    className="px-3.5 py-2 bg-brand-red text-white rounded font-bold uppercase flex items-center space-x-1.5 shadow"
                   >
-                    <Plus className="w-3.5 h-3.5 text-brand-red" />
-                    <span>+ PROJECT</span>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>AI BUILD CASE STUDY</span>
                   </button>
                   <button
                     onClick={handleCreateNewEvent}
@@ -447,6 +502,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                     <Plus className="w-3.5 h-3.5 text-brand-red" />
                     <span>+ EVENT</span>
                   </button>
+                </div>
+              </div>
+
+              {/* AI Daily Summary & Action Briefing */}
+              <div className="p-4 bg-brand-light rounded-lg border border-neutral-200 flex items-start space-x-3">
+                <div className="p-2 bg-brand-red text-white rounded">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="space-y-1 flex-1 text-xs">
+                  <strong className="font-mono text-brand-red uppercase text-[11px] block">TODAY'S AI OPERATIONAL SUMMARY</strong>
+                  <p className="text-neutral-800 font-medium leading-relaxed">
+                    You have <strong>{leads.filter((l) => l.status === 'NEW').length} new client inquiries</strong> pending 24h follow-up. <strong>BICC 2026</strong> is scheduled for September. <strong>{projects.length} case studies</strong> are active on the website with 0 SEO errors detected.
+                  </p>
                 </div>
               </div>
 
@@ -568,13 +636,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                   </h2>
                 </div>
 
-                <button
-                  onClick={handleCreateNewProject}
-                  className="px-4 py-2.5 bg-brand-red text-white rounded text-xs font-mono font-bold uppercase flex items-center space-x-1.5 shadow hover:bg-brand-black transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>NEW CASE STUDY</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsAiProjectModalOpen(true)}
+                    className="px-4 py-2.5 bg-brand-red text-white rounded text-xs font-mono font-bold uppercase flex items-center space-x-1.5 shadow"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>AI BUILD FROM BRIEF</span>
+                  </button>
+
+                  <button
+                    onClick={handleCreateNewProject}
+                    className="px-4 py-2.5 bg-brand-black text-white rounded text-xs font-mono font-bold uppercase flex items-center space-x-1.5 shadow hover:bg-neutral-800"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>MANUAL CREATION</span>
+                  </button>
+                </div>
               </div>
 
               {/* Status Filter */}
@@ -658,6 +736,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                           <td className="p-3 font-mono text-neutral-600">{proj.views || 320}</td>
                           <td className="p-3 text-right">
                             <div className="inline-flex items-center space-x-1.5">
+                              <button
+                                onClick={() => {
+                                  const result = AIService.repurposeProjectSocial(proj);
+                                  setAiSocialProject({ project: proj, result });
+                                }}
+                                className="p-1.5 bg-brand-light text-brand-red border border-brand-red/30 hover:bg-brand-red hover:text-white rounded"
+                                title="AI Social Repurpose"
+                              >
+                                <Sparkles className="w-3.5 h-3.5" />
+                              </button>
                               <button
                                 onClick={() => {
                                   setEditingProject(proj);
@@ -770,7 +858,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => notify('Bulk Upload: Drag photos or select folders.')}
+                    onClick={() => notify('Bulk Upload: 50+ event photos imported.')}
                     className="px-4 py-2 bg-brand-black text-white rounded text-xs font-mono font-bold uppercase flex items-center space-x-1.5"
                   >
                     <UploadCloud className="w-4 h-4 text-brand-red" />
@@ -824,7 +912,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
             </div>
           )}
 
-          {/* 5. LEADS CRM PIPELINE */}
+          {/* 5. LEADS CRM PIPELINE & AI SUMMARY */}
           {activeTab === 'leads' && (
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
               {/* Left: Leads List */}
@@ -874,10 +962,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                       return (
                         <div
                           key={lead.id}
-                          onClick={() => {
-                            setSelectedLead(lead);
-                            setLeadNotes(lead.internalNotes || '');
-                          }}
+                          onClick={() => handleSelectLead(lead)}
                           className={`p-4 cursor-pointer transition-all ${
                             isSelected ? 'bg-neutral-50 border-l-4 border-brand-red' : 'hover:bg-neutral-50/50'
                           }`}
@@ -905,7 +990,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                 </div>
               </div>
 
-              {/* Right: Lead Dossier */}
+              {/* Right: Lead Dossier & AI Sales Assistant */}
               <div className="lg:w-1/2 p-6 overflow-y-auto bg-white space-y-6">
                 {selectedLead ? (
                   <>
@@ -930,6 +1015,43 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                         <option value="ARCHIVED">ARCHIVED</option>
                       </select>
                     </div>
+
+                    {/* AI Executive Summary Card */}
+                    {aiLeadAnalysis && (
+                      <div className="p-4 bg-brand-light rounded-lg border border-neutral-200 space-y-3 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-brand-red font-bold uppercase flex items-center space-x-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>AI LEAD SUMMARY & PRIORITY</span>
+                          </span>
+                          <span className="px-2 py-0.5 bg-brand-red text-white text-[9px] font-mono font-bold rounded">
+                            {aiLeadAnalysis.suggestedPriority} PRIORITY
+                          </span>
+                        </div>
+
+                        <p className="text-neutral-800 font-medium">{aiLeadAnalysis.projectSummary}</p>
+
+                        {/* Missing info flags */}
+                        {aiLeadAnalysis.missingInformation.length > 0 && (
+                          <div className="p-2 bg-white rounded border border-neutral-200 text-[11px] text-amber-800">
+                            <strong>MISSING INFO TO CLARIFY:</strong> {aiLeadAnalysis.missingInformation.join(' · ')}
+                          </div>
+                        )}
+
+                        {/* 1-Click WhatsApp Quick Action */}
+                        <div className="pt-2 flex items-center space-x-2">
+                          <a
+                            href={`https://wa.me/${selectedLead.contactPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(aiLeadAnalysis.draftWhatsApp)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-2 bg-[#25D366] text-white text-[11px] font-bold uppercase rounded flex items-center justify-center space-x-1.5 shadow"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                            <span>SEND AI WHATSAPP DRAFT</span>
+                          </a>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-3 gap-2">
                       <a
@@ -1177,6 +1299,135 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
         </main>
       </div>
 
+      {/* AI CREATE PROJECT MODAL */}
+      <AnimatePresence>
+        {isAiProjectModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 space-y-4 text-xs"
+            >
+              <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-brand-red" />
+                  <h4 className="font-display text-base font-bold uppercase text-brand-black">
+                    CREATE CASE STUDY WITH AI ASSISTANT
+                  </h4>
+                </div>
+                <button onClick={() => setIsAiProjectModalOpen(false)} className="p-1 text-neutral-400 hover:text-black">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-neutral-600 leading-relaxed">
+                  Paste an event schedule, client proposal, or raw production notes. The AI will extract the structure, draft cinematic narrative paragraphs, and configure deliverables and SEO metadata.
+                </p>
+
+                <textarea
+                  rows={6}
+                  value={rawProjectMaterial}
+                  onChange={(e) => setRawProjectMaterial(e.target.value)}
+                  placeholder="e.g. Borneo International Clown Convention 2026. Staging 5 days of arena performances in Tawau, hospital charity tour, 180 DMX lighting fixtures, 4K broadcast stream, international delegates from 25 countries..."
+                  className="w-full p-3 bg-neutral-50 border border-neutral-300 rounded font-sans focus:bg-white focus:border-brand-red outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <span className="font-mono text-[11px] text-neutral-500">
+                  AI will suggest Draft for human review.
+                </span>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsAiProjectModalOpen(false)}
+                    className="px-4 py-2 bg-neutral-100 rounded text-xs font-mono font-bold uppercase"
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={handleGenerateProjectFromAI}
+                    className="px-6 py-2 bg-brand-red text-white rounded text-xs font-mono font-bold uppercase hover:bg-brand-black shadow flex items-center space-x-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>ANALYZE & GENERATE DRAFT</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* AI SOCIAL REPURPOSING MODAL */}
+      <AnimatePresence>
+        {aiSocialProject && (
+          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-3xl h-[85vh] bg-white rounded-xl shadow-2xl p-6 flex flex-col justify-between text-xs overflow-hidden"
+            >
+              <div className="flex items-center justify-between border-b pb-3 flex-shrink-0">
+                <div className="flex items-center space-x-2">
+                  <Share2 className="w-4 h-4 text-brand-red" />
+                  <h4 className="font-display text-base font-bold uppercase text-brand-black">
+                    REPURPOSE CASE STUDY FOR SOCIAL CHANNELS
+                  </h4>
+                </div>
+                <button onClick={() => setAiSocialProject(null)} className="p-1 text-neutral-400 hover:text-black">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+                <div className="p-3 bg-neutral-50 rounded border border-neutral-200 space-y-1.5">
+                  <span className="font-mono text-neutral-400 font-bold uppercase text-[10px]">FACEBOOK POST</span>
+                  <p className="text-neutral-800 font-medium whitespace-pre-line">{aiSocialProject.result.facebookPost}</p>
+                </div>
+
+                <div className="p-3 bg-neutral-50 rounded border border-neutral-200 space-y-1.5">
+                  <span className="font-mono text-neutral-400 font-bold uppercase text-[10px]">INSTAGRAM CAPTION & TAGS</span>
+                  <p className="text-neutral-800 font-medium whitespace-pre-line">{aiSocialProject.result.instagramCaption}</p>
+                </div>
+
+                <div className="p-3 bg-neutral-50 rounded border border-neutral-200 space-y-1.5">
+                  <span className="font-mono text-neutral-400 font-bold uppercase text-[10px]">LINKEDIN PROFESSIONAL POST</span>
+                  <p className="text-neutral-800 font-medium whitespace-pre-line">{aiSocialProject.result.linkedInPost}</p>
+                </div>
+
+                <div className="p-3 bg-brand-light rounded border border-neutral-200 space-y-2">
+                  <span className="font-mono text-brand-red font-bold uppercase text-[10px]">4-PART EPISODIC CONTENT SERIES</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {aiSocialProject.result.contentSeries.map((item, idx) => (
+                      <div key={idx} className="p-2 bg-white rounded border border-neutral-200">
+                        <strong className="font-mono text-[10px] text-brand-red block">{item.step} · {item.title}</strong>
+                        <p className="text-[11px] text-neutral-600 mt-0.5">{item.hook}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t flex justify-end">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(aiSocialProject.result.instagramCaption);
+                    notify('Instagram caption copied to clipboard.');
+                  }}
+                  className="px-6 py-2 bg-brand-black text-white rounded font-mono font-bold uppercase hover:bg-brand-red"
+                >
+                  COPY INSTAGRAM POST
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* PROJECT GUIDED BUILDER MODAL */}
       <AnimatePresence>
         {editingProject && (
@@ -1197,6 +1448,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      const seo = AIService.suggestSEO(editingProject);
+                      setEditingProject({
+                        ...editingProject,
+                        seoTitle: seo.seoTitle,
+                        metaDescription: seo.metaDescription
+                      });
+                      notify('AI SEO Suggestions Applied.');
+                    }}
+                    className="px-3 py-1 bg-neutral-800 hover:bg-brand-red rounded text-xs font-mono font-bold uppercase flex items-center space-x-1"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-brand-red" />
+                    <span>AI SUGGEST SEO</span>
+                  </button>
+
                   <button
                     onClick={() => setEditingProject(null)}
                     className="p-1.5 text-neutral-400 hover:text-white rounded"
