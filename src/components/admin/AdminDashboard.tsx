@@ -42,6 +42,7 @@ import {
   getStoredCMSEvents,
   saveCMSEvents,
   getStoredCMSStories,
+  saveCMSStories,
   getStoredMedia,
   getStoredLeads,
   updateLeadStatus,
@@ -98,6 +99,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [leadStatusFilter, setLeadStatusFilter] = useState('ALL');
   const [projectStatusFilter, setProjectStatusFilter] = useState('ALL');
   const [mediaCategoryFilter, setMediaCategoryFilter] = useState('ALL');
+  const [storyCategoryFilter, setStoryCategoryFilter] = useState('ALL');
   const [leadsViewMode, setLeadsViewMode] = useState<'list' | 'kanban'>('list');
 
   // Active Modals & Editors
@@ -106,6 +108,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [editingProject, setEditingProject] = useState<CMSProject | null>(null);
   const [projectStep, setProjectStep] = useState(1);
   const [editingEvent, setEditingEvent] = useState<CMSEvent | null>(null);
+  const [editingStory, setEditingStory] = useState<CMSStory | null>(null);
   const [viewingMedia, setViewingMedia] = useState<MediaAsset | null>(null);
   const [viewingMediaIndex, setViewingMediaIndex] = useState<number>(0);
   const [proposalLead, setProposalLead] = useState<LeadSubmission | null>(null);
@@ -356,6 +359,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     setActiveTab('projects');
     setEditingProject(newProj);
     notify(`Converted "${evt.name}" into Case Study Draft.`);
+  };
+
+  // --- Story Handlers ---
+  const handleCreateNewStory = () => {
+    const newStory: CMSStory = {
+      id: `STR-${Date.now().toString().slice(-4)}`,
+      title: 'New Behind the Scenes Chronicle',
+      slug: `new-story-${Date.now().toString().slice(-4)}`,
+      excerpt: 'Field insights and cinematography craft from our latest Borneo production.',
+      category: 'Behind the Scenes',
+      author: 'Ron Fatt',
+      date: new Date().toISOString().slice(0, 10),
+      heroImage: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+      content: 'Inside the creative and technical process behind C Design Production. Discover how our staging, cinema lenses, and indigenous community protocols converged in Sabah.',
+      status: 'DRAFT',
+    };
+    setEditingStory(newStory);
+  };
+
+  const handleSaveStory = (story: CMSStory) => {
+    const exists = stories.some((s) => s.id === story.id);
+    let updated: CMSStory[];
+    if (exists) {
+      updated = stories.map((s) => (s.id === story.id ? story : s));
+    } else {
+      updated = [story, ...stories];
+    }
+    setStories(updated);
+    saveCMSStories(updated);
+    setEditingStory(null);
+    notify('Story article saved successfully.');
+  };
+
+  const handleDuplicateStory = (story: CMSStory) => {
+    const duplicate: CMSStory = {
+      ...story,
+      id: `${story.id}-copy-${Date.now().toString().slice(-4)}`,
+      title: `${story.title} (Copy)`,
+      slug: `${story.slug}-copy`,
+      status: 'DRAFT',
+    };
+    const updated = [duplicate, ...stories];
+    setStories(updated);
+    saveCMSStories(updated);
+    notify(`Story duplicated as Draft: "${duplicate.title}"`);
+  };
+
+  const handleDeleteStory = (id: string) => {
+    if (confirm('Are you sure you want to delete this story article?')) {
+      const updated = stories.filter((s) => s.id !== id);
+      setStories(updated);
+      saveCMSStories(updated);
+      notify('Story deleted.');
+    }
   };
 
   // --- Lead CRM Handlers ---
@@ -943,6 +1000,115 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3.5 STORIES & NEWS EDITORIAL MODULE */}
+          {activeTab === 'stories' && (
+            <div className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-6">
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+                <div>
+                  <span className="text-xs font-mono font-bold text-brand-red uppercase">EDITORIAL & JOURNAL</span>
+                  <h2 className="font-display text-3xl font-black uppercase text-brand-black">
+                    STORIES & NEWS ({stories.length})
+                  </h2>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleCreateNewStory}
+                    className="px-4 py-2.5 bg-brand-red text-white rounded text-xs font-mono font-bold uppercase flex items-center space-x-1.5 shadow hover:bg-brand-black transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>NEW STORY / ARTICLE</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Category Filter Tabs */}
+              <div className="flex items-center space-x-2 text-xs font-mono overflow-x-auto pb-1 scrollbar-none">
+                {['ALL', 'Behind the Scenes', 'Production Insight', 'Culture', 'Event Recap', 'Company News'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setStoryCategoryFilter(cat)}
+                    className={`px-3 py-1.5 rounded uppercase font-bold whitespace-nowrap ${
+                      storyCategoryFilter === cat
+                        ? 'bg-brand-black text-white'
+                        : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Stories Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {stories
+                  .filter((s) => storyCategoryFilter === 'ALL' || s.category === storyCategoryFilter)
+                  .map((story) => (
+                    <div
+                      key={story.id}
+                      className="bg-white rounded-lg border border-neutral-200 overflow-hidden shadow-sm flex flex-col justify-between hover:border-neutral-400 transition-colors"
+                    >
+                      <div className="h-48 relative bg-neutral-900">
+                        <img src={story.heroImage} alt={story.title} className="w-full h-full object-cover" />
+                        <span className="absolute top-3 left-3 bg-brand-red text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase shadow">
+                          {story.category}
+                        </span>
+                        <span
+                          className={`absolute top-3 right-3 text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase shadow ${
+                            story.status === 'PUBLISHED' ? 'bg-emerald-600 text-white' : 'bg-neutral-800 text-neutral-300'
+                          }`}
+                        >
+                          {story.status}
+                        </span>
+                      </div>
+
+                      <div className="p-5 space-y-2 flex-1">
+                        <span className="text-[10px] font-mono text-neutral-400 block">
+                          {story.date} · BY {story.author}
+                        </span>
+                        <h3 className="font-display text-base font-bold uppercase text-brand-black leading-snug">
+                          {story.title}
+                        </h3>
+                        <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
+                          {story.excerpt}
+                        </p>
+                      </div>
+
+                      <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between text-xs font-mono">
+                        <span className="text-neutral-400 text-[10px]">
+                          /stories/{story.slug}
+                        </span>
+
+                        <div className="flex items-center space-x-1.5">
+                          <button
+                            onClick={() => setEditingStory(story)}
+                            className="p-1.5 bg-white border border-neutral-300 hover:bg-brand-black hover:text-white rounded"
+                            title="Edit Story"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDuplicateStory(story)}
+                            className="p-1.5 bg-white border border-neutral-300 hover:bg-brand-black hover:text-white rounded"
+                            title="Duplicate Story"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStory(story.id)}
+                            className="p-1.5 bg-white border border-neutral-300 hover:bg-brand-red hover:text-white text-neutral-500 rounded"
+                            title="Delete Story"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -2144,6 +2310,131 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                   className="px-6 py-2 bg-brand-red text-white rounded text-xs font-mono font-bold uppercase hover:bg-brand-black shadow"
                 >
                   SAVE EVENT
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* STORY / ARTICLE EDIT MODAL */}
+      <AnimatePresence>
+        {editingStory && (
+          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-2xl max-h-[92vh] bg-white rounded-xl shadow-2xl p-6 flex flex-col justify-between overflow-y-auto space-y-4 text-xs"
+            >
+              <div className="flex items-center justify-between border-b pb-3 flex-shrink-0">
+                <h4 className="font-display text-base font-bold uppercase text-brand-black">
+                  {editingStory.id.startsWith('STR-') ? 'EDIT STORY ARTICLE' : 'NEW STORY ARTICLE'}
+                </h4>
+                <button onClick={() => setEditingStory(null)} className="p-1 text-neutral-400 hover:text-black">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+                <div>
+                  <label className="font-mono font-bold block mb-1">STORY TITLE *</label>
+                  <input
+                    type="text"
+                    value={editingStory.title}
+                    onChange={(e) => setEditingStory({ ...editingStory, title: e.target.value })}
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-display text-sm font-bold uppercase"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-mono font-bold block mb-1">CATEGORY</label>
+                    <select
+                      value={editingStory.category}
+                      onChange={(e) => setEditingStory({ ...editingStory, category: e.target.value as any })}
+                      className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono font-bold"
+                    >
+                      <option value="Behind the Scenes">Behind the Scenes</option>
+                      <option value="Production Insight">Production Insight</option>
+                      <option value="Culture">Culture</option>
+                      <option value="Event Recap">Event Recap</option>
+                      <option value="Company News">Company News</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-mono font-bold block mb-1">AUTHOR</label>
+                    <input
+                      type="text"
+                      value={editingStory.author}
+                      onChange={(e) => setEditingStory({ ...editingStory, author: e.target.value })}
+                      className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">HERO COVER IMAGE URL</label>
+                  <input
+                    type="text"
+                    value={editingStory.heroImage}
+                    onChange={(e) => setEditingStory({ ...editingStory, heroImage: e.target.value })}
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded"
+                  />
+                  <div className="mt-2 h-36 rounded overflow-hidden border">
+                    <img src={editingStory.heroImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">EXCERPT / TEASER SUMMARY</label>
+                  <textarea
+                    rows={2}
+                    value={editingStory.excerpt}
+                    onChange={(e) => setEditingStory({ ...editingStory, excerpt: e.target.value })}
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">STORY NARRATIVE & CONTENT</label>
+                  <textarea
+                    rows={6}
+                    value={editingStory.content}
+                    onChange={(e) => setEditingStory({ ...editingStory, content: e.target.value })}
+                    placeholder="Write detailed production journal, technical blueprints, and cultural takeaways..."
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-mono font-bold block mb-1">PUBLICATION STATUS</label>
+                  <select
+                    value={editingStory.status}
+                    onChange={(e) => setEditingStory({ ...editingStory, status: e.target.value as any })}
+                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded font-mono font-bold"
+                  >
+                    <option value="DRAFT">DRAFT (Hidden)</option>
+                    <option value="REVIEW">REVIEW</option>
+                    <option value="PUBLISHED">PUBLISHED (Live)</option>
+                    <option value="ARCHIVED">ARCHIVED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-3 border-t flex-shrink-0">
+                <button
+                  onClick={() => setEditingStory(null)}
+                  className="px-4 py-2 bg-neutral-100 rounded text-xs font-mono font-bold uppercase"
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={() => handleSaveStory(editingStory)}
+                  className="px-6 py-2 bg-brand-red text-white rounded text-xs font-mono font-bold uppercase hover:bg-brand-black shadow"
+                >
+                  SAVE STORY
                 </button>
               </div>
             </motion.div>
