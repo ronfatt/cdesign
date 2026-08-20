@@ -12,6 +12,7 @@ import { FlagshipCaseStudy } from './components/casestudy/FlagshipCaseStudy';
 import { HorizontalStories } from './components/featured/HorizontalStories';
 import { WhatWeDo } from './components/services/WhatWeDo';
 import { BiccScrollStory } from './components/bicc/BiccScrollStory';
+import { EventsSection } from './components/events/EventsSection';
 import { OriginalsCarousel } from './components/originals/OriginalsCarousel';
 import { RootedInBorneo } from './components/culture/RootedInBorneo';
 import { CreativityWithPurpose } from './components/impact/CreativityWithPurpose';
@@ -196,6 +197,12 @@ export function AppContent() {
 
           {/* 07. BICC 2026 Scroll Story (6-Phase Documentary Narrative & Red Story Line) */}
           <BiccScrollStory onSelectProject={(p) => handleOpenCaseStudy(p)} />
+
+          {/* 07.5 Productions & Festivals Events Section (Live CMS Events with 4K Highlight Video & Photo Gallery) */}
+          <EventsSection
+            onSelectEvent={(evt) => setActiveEventRecap(evt)}
+            onOpenInquiry={(topic) => handleOpenInquiry(topic)}
+          />
 
           {/* 08. C Design Originals (Draggable 3D Cover Carousel) */}
           <OriginalsCarousel onOpenInquiry={(ip) => handleOpenInquiry(ip)} />

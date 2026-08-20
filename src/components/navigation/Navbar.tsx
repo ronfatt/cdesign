@@ -17,6 +17,7 @@ const navLinks = [
   { label: 'HOME', sectionId: 'hero' },
   { label: 'WORK', sectionId: 'work' },
   { label: 'SERVICES', sectionId: 'services' },
+  { label: 'EVENTS', sectionId: 'events' },
   { label: 'ORIGINALS', sectionId: 'originals' },
   { label: 'IMPACT', sectionId: 'impact' },
   { label: 'ABOUT', sectionId: 'about' },

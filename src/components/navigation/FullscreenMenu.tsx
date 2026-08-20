@@ -38,27 +38,33 @@ const menuItems: MenuItem[] = [
     tagline: 'Experiences, Film, Creative, Culture & Impact'
   },
   {
+    title: 'EVENTS',
+    sectionId: 'events',
+    number: '04',
+    tagline: 'Upcoming Festivals, Conventions & Video Recaps'
+  },
+  {
     title: 'ORIGINALS',
     sectionId: 'originals',
-    number: '04',
+    number: '05',
     tagline: 'Proprietary IP & Signature Conventions'
   },
   {
     title: 'IMPACT',
     sectionId: 'impact',
-    number: '05',
+    number: '06',
     tagline: 'Creativity With Purpose & Community Roots'
   },
   {
     title: 'ABOUT',
     sectionId: 'about',
-    number: '06',
+    number: '07',
     tagline: 'The Team, Ethos & Behind The Scenes'
   },
   {
     title: 'CONTACT',
     sectionId: 'contact',
-    number: '07',
+    number: '08',
     tagline: 'Commission a Project / Partnership'
   },
 ];
